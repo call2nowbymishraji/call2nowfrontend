@@ -6,7 +6,7 @@
   NODE_VERSION = "20"
   VITE_API_URL = "https://call2nowbackendend.onrender.com/api"
   VITE_API_ORIGIN = "https://call2nowbackendend.onrender.com"
-  VITE_GOOGLE_CLIENT_ID = "1076810103836-0r02m5i9qqu6vn5g15tcp8vis3df39te.apps.googleusercontent.com"
+  VITE_GOOGLE_CLIENT_ID = "83347382426-50sgg74v3t0c68e5pu1jj2470anpkp9u.apps.googleusercontent.com"
 
 [[redirects]]
   from = "/*"
