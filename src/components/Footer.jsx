@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const SOCIALS = [
   { label: 'Facebook', href: 'https://facebook.com/call2now' },
   { label: 'Instagram', href: 'https://instagram.com/call2now' },
@@ -64,7 +66,14 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-slate-800 py-4 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} Call2Now. All rights reserved. · Created by Vaibhav
+        © {new Date().getFullYear()} Call2Now. All rights reserved. · Created by Vaibhav ·{' '}
+        <Link to="/privacy" className="font-semibold hover:text-white hover:underline">
+          Privacy Policy
+        </Link>{' '}
+        ·{' '}
+        <Link to="/terms" className="font-semibold hover:text-white hover:underline">
+          Terms of Service
+        </Link>
       </div>
     </footer>
   );

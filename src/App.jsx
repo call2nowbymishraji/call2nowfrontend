@@ -1,10 +1,13 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
 import CreateProfile from './pages/CreateProfile.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import SearchResults from './pages/SearchResults.jsx';
+import NotFound from './pages/NotFound.jsx';
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
+import TermsOfService from './pages/TermsOfService.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute.jsx';
 
@@ -40,7 +43,9 @@ export default function App() {
           </AdminRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
