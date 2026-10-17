@@ -48,7 +48,7 @@ export default function OtpModal({ open, title, subtitle, email, devCode, onVeri
           {error && <p className="err text-center">{error}</p>}
           {devCode && (
             <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-amber-700">
-              Dev mode — your OTP is {devCode}
+              Dev mode: your OTP is {devCode}
             </p>
           )}
           <button type="submit" disabled={busy} className="btn-primary mt-4 w-full">

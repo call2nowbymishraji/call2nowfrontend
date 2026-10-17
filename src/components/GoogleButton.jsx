@@ -1,33 +1,36 @@
 import { useEffect, useState } from 'react';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+let initDone = false;
+let activeCb = null;
 
 export default function GoogleButton({ onCredential }) {
   const [devOpen, setDevOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  activeCb = onCredential;
 
   useEffect(() => {
-    if (CLIENT_ID) {
-      const id = 'gsi-script';
-      if (!document.getElementById(id)) {
-        const s = document.createElement('script');
-        s.id = id;
-        s.src = 'https://accounts.google.com/gsi/client';
-        s.async = true;
-        s.defer = true;
-        document.body.appendChild(s);
-      }
-      const tryInit = () => {
-        if (!window.google?.accounts?.id) return setTimeout(tryInit, 300);
-        window.google.accounts.id.initialize({
-          client_id: CLIENT_ID,
-          callback: (res) => onCredential({ credential: res.credential }),
-        });
-      };
-      tryInit();
+    if (!CLIENT_ID || initDone) return;
+    const id = 'gsi-script';
+    if (!document.getElementById(id)) {
+      const s = document.createElement('script');
+      s.id = id;
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true;
+      s.defer = true;
+      document.body.appendChild(s);
     }
-  }, [onCredential]);
+    const tryInit = () => {
+      if (!window.google?.accounts?.id) return setTimeout(tryInit, 300);
+      window.google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        callback: (res) => activeCb && activeCb({ credential: res.credential }),
+      });
+      initDone = true;
+    };
+    tryInit();
+  }, []);
 
   const click = () => {
     if (CLIENT_ID && window.google?.accounts?.id) {
@@ -51,7 +54,7 @@ export default function GoogleButton({ onCredential }) {
       {devOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 px-4" role="dialog" aria-modal="true">
           <div className="card w-full max-w-sm p-6">
-            <h3 className="text-lg font-bold text-slate-800">Dev mode — Google login</h3>
+            <h3 className="text-lg font-bold text-slate-800">Dev mode: Google login</h3>
             <p className="mt-1 text-xs text-slate-500">
               No VITE_GOOGLE_CLIENT_ID configured, so simulate the Google account that would be returned.
             </p>

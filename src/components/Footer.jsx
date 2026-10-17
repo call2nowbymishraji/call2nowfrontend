@@ -3,7 +3,7 @@ const SOCIALS = [
   { label: 'Instagram', href: 'https://instagram.com/call2now' },
   { label: 'X (Twitter)', href: 'https://x.com/call2now' },
   { label: 'YouTube', href: 'https://youtube.com/@call2now' },
-  { label: 'WhatsApp', href: 'https://wa.me/919999999999' },
+  { label: 'WhatsApp', href: 'https://wa.me/919305035828' },
 ];
 
 export default function Footer() {
@@ -12,13 +12,13 @@ export default function Footer() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-3">
         <div>
           <img src="/logo.png" alt="call2now" className="h-8 w-auto brightness-110" />
-          <p className="mt-3 text-sm text-slate-400">Find any business near you. Register your business and get discovered by your city.</p>
+          <p className="mt-3 text-sm text-slate-400">Register your business profile and get discovered by your city.</p>
         </div>
         <div>
           <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">Contact Us</h4>
           <ul className="space-y-2 text-sm">
-            <li>support@call2now.in</li>
-            <li>+91 99999 99999</li>
+            <li>call2nowbymishraji@gmail.com</li>
+            <li>+91 9305035828</li>
             <li>Indore, Madhya Pradesh, India</li>
           </ul>
         </div>

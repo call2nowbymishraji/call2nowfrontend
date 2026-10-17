@@ -1,24 +1,36 @@
 import { useCallback, useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar.jsx';
+import ImageInput from '../../components/ImageInput.jsx';
 import adminService from '../../services/adminService.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { assetUrl, errMsg } from '../../services/api.js';
 
-const TENURES = [0, 30, 60];
+const TENURES = [
+  [0, 'No free promotion'],
+  [30, '30 days free'],
+  [60, '60 days free'],
+  [365, '1 year paid subscription'],
+  [36500, 'Lifetime paid subscription'],
+];
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('profiles');
   const [profiles, setProfiles] = useState([]);
   const [slides, setSlides] = useState([]);
+  const [ads, setAds] = useState([]);
+  const [featuredLive, setFeaturedLive] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
 
   const [slideForm, setSlideForm] = useState({ title: '', subtitle: '', profileId: '', imageFile: null });
+  const [adForm, setAdForm] = useState({ title: '', subtitle: '', ctaText: '', linkUrl: '', placement: 'popup', imageFile: null });
 
   const load = useCallback(() => {
     adminService.listProfiles().then((d) => setProfiles(d.profiles || [])).catch(() => {});
     adminService.listSlides().then((d) => setSlides(d.slides || [])).catch(() => {});
+    adminService.listAds().then((d) => setAds(d.ads || [])).catch(() => {});
+    adminService.getSettings().then((d) => setFeaturedLive(!!d.settings?.featuredLive)).catch(() => {});
   }, []);
 
   useEffect(load, [load]);
@@ -48,6 +60,20 @@ export default function AdminDashboard() {
     setSlideForm({ title: '', subtitle: '', profileId: '', imageFile: null });
   };
 
+  const createAd = async (e) => {
+    e.preventDefault();
+    if (!adForm.title.trim()) return toast('Ad title required', 'error');
+    const fd = new FormData();
+    fd.append('title', adForm.title);
+    fd.append('subtitle', adForm.subtitle);
+    fd.append('ctaText', adForm.ctaText);
+    fd.append('linkUrl', adForm.linkUrl);
+    fd.append('placement', adForm.placement);
+    if (adForm.imageFile) fd.append('image', adForm.imageFile);
+    await run(() => adminService.createAd(fd), 'Ad created');
+    setAdForm({ title: '', subtitle: '', ctaText: '', linkUrl: '', placement: 'popup', imageFile: null });
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -59,6 +85,7 @@ export default function AdminDashboard() {
           {[
             ['profiles', 'Profiles & products'],
             ['slides', 'Front-page slider'],
+            ['ads', 'Advertisements'],
           ].map(([k, label]) => (
             <button
               key={k}
@@ -97,14 +124,48 @@ export default function AdminDashboard() {
                       disabled={busy}
                       onChange={(e) => run(() => adminService.setTenure(p._id, Number(e.target.value)), 'Promotion tenure updated')}
                     >
-                      {TENURES.map((d) => (
+                      {TENURES.map(([d, label]) => (
                         <option key={d} value={d}>
-                          {d === 0 ? 'No free promotion' : `${d} days free`}
+                          {label}
                         </option>
                       ))}
                     </select>
                     <button className="btn-outline !py-2 text-sm" onClick={() => setExpanded(expanded === p._id ? null : p._id)}>
                       {expanded === p._id ? 'Hide products' : 'Products'}
+                    </button>
+                    <button
+                      className={`rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+                        p.verified
+                          ? 'bg-ggreen text-white shadow-pill'
+                          : 'bg-white text-slate-600 shadow-pill hover:text-ggreen'
+                      }`}
+                      disabled={busy}
+                      title="Verify this profile once the owner contacts you on WhatsApp"
+                      onClick={() =>
+                        run(
+                          () => adminService.setVerified(p._id, !p.verified),
+                          p.verified ? 'Verification removed' : 'Profile verified'
+                        )
+                      }
+                    >
+                      {p.verified ? '✓ Verified' : 'Verify'}
+                    </button>
+                    <button
+                      className={`rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+                        p.suggested
+                          ? 'bg-primary text-white shadow-pill'
+                          : 'bg-white text-slate-600 shadow-pill hover:text-primary'
+                      }`}
+                      disabled={busy}
+                      title="Show this profile in 'Suggested by us' on the home page"
+                      onClick={() =>
+                        run(
+                          () => adminService.setSuggested(p._id, !p.suggested),
+                          p.suggested ? 'Removed from suggested' : 'Added to suggested'
+                        )
+                      }
+                    >
+                      {p.suggested ? '★ Suggested' : '☆ Suggest'}
                     </button>
                     <button
                       className="rounded-full bg-gred/10 px-4 py-2 text-sm font-semibold text-gred transition hover:bg-gred hover:text-white"
@@ -145,7 +206,23 @@ export default function AdminDashboard() {
         )}
 
         {tab === 'slides' && (
-          <div className="mt-6 grid gap-6 lg:grid-cols-3">
+          <div className="mt-6 space-y-6">
+            <div className="card flex flex-wrap items-center justify-between gap-4 p-5">
+              <div>
+                <h2 className="font-bold text-slate-800">Featured businesses section</h2>
+                <p className="mt-0.5 text-xs text-slate-500">Show or hide the featured slider on the home page.</p>
+              </div>
+              <button
+                disabled={busy}
+                onClick={() => run(() => adminService.setSettings(!featuredLive), featuredLive ? 'Featured section hidden' : 'Featured section is live')}
+                className={`rounded-full px-5 py-2.5 text-sm font-semibold transition disabled:opacity-50 ${
+                  featuredLive ? 'bg-ggreen text-white shadow-pill' : 'bg-slate-200 text-slate-600 shadow-pill hover:bg-slate-300'
+                }`}
+              >
+                {featuredLive ? '● Live on home page' : '○ Hidden from home page'}
+              </button>
+            </div>
+            <div className="grid gap-6 lg:grid-cols-3">
             <form onSubmit={createSlide} className="card space-y-3 p-6">
               <h2 className="section-title">Add promotion slide</h2>
               <input className="input" placeholder="Title *" value={slideForm.title} onChange={(e) => setSlideForm((s) => ({ ...s, title: e.target.value }))} />
@@ -190,6 +267,69 @@ export default function AdminDashboard() {
                     className="text-xs font-bold text-gred hover:underline"
                     disabled={busy}
                     onClick={() => run(() => adminService.deleteSlide(s._id), 'Slide deleted')}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
+            </div>
+          </div>
+        )}
+
+        {tab === 'ads' && (
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
+            <form onSubmit={createAd} className="card space-y-3 p-6">
+              <h2 className="section-title">Add advertisement</h2>
+              <input className="input" placeholder="Title *" value={adForm.title} onChange={(e) => setAdForm((s) => ({ ...s, title: e.target.value }))} />
+              <input className="input" placeholder="Subtitle / offer text" value={adForm.subtitle} onChange={(e) => setAdForm((s) => ({ ...s, subtitle: e.target.value }))} />
+              <input className="input" placeholder="Button text (e.g. Shop now)" value={adForm.ctaText} onChange={(e) => setAdForm((s) => ({ ...s, ctaText: e.target.value }))} />
+              <input className="input" placeholder="Link URL (https://...)" value={adForm.linkUrl} onChange={(e) => setAdForm((s) => ({ ...s, linkUrl: e.target.value }))} />
+              <select className="input" value={adForm.placement} onChange={(e) => setAdForm((s) => ({ ...s, placement: e.target.value }))}>
+                <option value="popup">Home page popup</option>
+                <option value="left">Left side</option>
+                <option value="right">Right side</option>
+              </select>
+              <ImageInput
+                shape="box"
+                label="Ad image"
+                value={adForm.imageFile}
+                cropAspect={adForm.placement === 'popup' ? 8 / 5 : 9 / 16}
+                onChange={(file) => setAdForm((s) => ({ ...s, imageFile: file }))}
+              />
+              <button type="submit" disabled={busy} className="btn-primary w-full">
+                Add ad
+              </button>
+            </form>
+            <div className="card divide-y divide-slate-100 lg:col-span-2">
+              {ads.length === 0 && <p className="p-8 text-center text-sm text-slate-400">No ads yet.</p>}
+              {ads.map((a) => (
+                <div key={a._id} className="flex items-center gap-4 p-4">
+                  {a.image ? (
+                    <img src={assetUrl(a.image)} alt={a.title} className="h-14 w-20 rounded-lg object-cover" />
+                  ) : (
+                    <div className="grid h-14 w-20 place-items-center rounded-lg bg-slate-100 text-[10px] font-bold text-slate-400">AD</div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-bold text-slate-800">{a.title}</p>
+                    <p className="truncate text-xs text-slate-500">
+                      {a.placement} · {a.subtitle || 'No subtitle'}
+                    </p>
+                  </div>
+                  <label className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                    <input
+                      type="checkbox"
+                      className="accent-primary"
+                      checked={a.active}
+                      disabled={busy}
+                      onChange={(e) => run(() => adminService.toggleAd(a._id, e.target.checked), a.active ? 'Ad hidden' : 'Ad live')}
+                    />
+                    Live
+                  </label>
+                  <button
+                    className="text-xs font-bold text-gred hover:underline"
+                    disabled={busy}
+                    onClick={() => run(() => adminService.deleteAd(a._id), 'Ad deleted')}
                   >
                     Delete
                   </button>

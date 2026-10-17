@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
 import ImageInput from '../components/ImageInput.jsx';
+import ImageCropper from '../components/ImageCropper.jsx';
 import profileService from '../services/profileService.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
@@ -10,7 +11,7 @@ import { slugify } from '../utils/slugify.js';
 import { assetUrl, errMsg } from '../services/api.js';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const MAX_GALLERY = 10;
+const MAX_GALLERY = 9;
 const MAX_PRODUCTS = 10;
 const MAX_DESC_WORDS = 500;
 
@@ -39,10 +40,17 @@ export default function CreateProfile() {
     whatsapp: '',
     email: user?.email || '',
     address: '',
-    inMarketSince: new Date().getFullYear(),
+    inMarketSince: '',
     description: '',
     gst: '',
     mapUrl: '',
+    instagram: '',
+    facebook: '',
+    telegram: '',
+    whatsappUrl: '',
+    website: '',
+    x: '',
+    linkedin: '',
     onlineDelivery: false,
     panIndia: false,
     openAllDays: true,
@@ -54,9 +62,17 @@ export default function CreateProfile() {
   const [catOpen, setCatOpen] = useState(false);
   const [shopImageFile, setShopImageFile] = useState(null);
   const [shopImagePath, setShopImagePath] = useState(null);
+  const [coverImageFile, setCoverImageFile] = useState(null);
+  const [coverImagePath, setCoverImagePath] = useState(null);
   const [gallery, setGallery] = useState([]); // { id, file?, path? }
+  const [cropQueue, setCropQueue] = useState([]);
   const [products, setProducts] = useState([emptyProduct()]);
   const gid = useRef(0);
+  const galleryRef = useRef([]);
+  const updateGallery = (next) => {
+    galleryRef.current = next;
+    setGallery(next);
+  };
 
   const set = (k) => (e) => {
     const v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -87,10 +103,17 @@ export default function CreateProfile() {
           whatsappSame: p.whatsapp === p.phone,
           email: p.email,
           address: p.address,
-          inMarketSince: p.inMarketSince,
+          inMarketSince: p.inMarketSince || '',
           description: p.description || '',
           gst: p.gst || '',
           mapUrl: p.mapUrl || '',
+          instagram: p.instagram || '',
+          facebook: p.facebook || '',
+          telegram: p.telegram || '',
+          whatsappUrl: p.whatsappUrl || '',
+          website: p.website || '',
+          x: p.x || '',
+          linkedin: p.linkedin || '',
           onlineDelivery: p.onlineDelivery,
           panIndia: p.panIndia,
           openAllDays: p.operationDays?.length === 7,
@@ -99,7 +122,8 @@ export default function CreateProfile() {
           operationClose: p.operationClose || '21:00',
         }));
         setShopImagePath(p.shopImage || null);
-        setGallery((p.gallery || []).map((path) => ({ id: ++gid.current, path })));
+        setCoverImagePath(p.coverImage || null);
+        updateGallery((p.gallery || []).slice(0, MAX_GALLERY).map((path) => ({ id: ++gid.current, path })));
         setProducts(
           (p.products || []).map((pr) => ({
             name: pr.name,
@@ -116,6 +140,10 @@ export default function CreateProfile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editMode]);
 
+  useEffect(() => {
+    if (user?.role === 'admin') navigate('/', { replace: true });
+  }, [user, navigate]);
+
   const effectiveCategory = f.category === 'Other' ? f.customCategory.trim() : f.category;
   const slug = slugify(f.shopName);
   const catSuggestions = useMemo(() => {
@@ -126,10 +154,15 @@ export default function CreateProfile() {
   const setProduct = (i, k, v) =>
     setProducts((ps) => ps.map((p, j) => (j === i ? { ...p, [k]: v } : p)));
 
-  const addGallery = (file) => {
-    if (!file) return;
-    if (gallery.length >= MAX_GALLERY) return toast(`Maximum ${MAX_GALLERY} photos`, 'error');
-    setGallery((g) => [...g, { id: ++gid.current, file }]);
+  const addGallery = (files) => {
+    const valid = (Array.isArray(files) ? files : [files]).filter(Boolean);
+    if (!valid.length) return;
+    const room = MAX_GALLERY - galleryRef.current.length;
+    if (room <= 0) return toast(`Only ${MAX_GALLERY} gallery photos can be uploaded`, 'error');
+    const accepted = valid.slice(0, room);
+    if (valid.length > room)
+      toast(`Only ${MAX_GALLERY} gallery photos allowed. ${valid.length - room} extra photo(s) were not added`, 'error');
+    if (accepted.length) setCropQueue((q) => [...q, ...accepted]);
   };
 
   const validate = () => {
@@ -161,10 +194,27 @@ export default function CreateProfile() {
       const fd = new FormData();
       fd.append('category', f.category === 'Other' ? 'Other' : f.category);
       if (f.category === 'Other') fd.append('customCategory', f.customCategory.trim());
-      ['shopName', 'ownerName', 'phone', 'whatsapp', 'email', 'address', 'description', 'gst', 'mapUrl', 'operationOpen', 'operationClose'].forEach((k) =>
-        fd.append(k, f[k])
-      );
-      fd.append('inMarketSince', f.inMarketSince);
+      [
+        'shopName',
+        'ownerName',
+        'phone',
+        'whatsapp',
+        'email',
+        'address',
+        'description',
+        'gst',
+        'mapUrl',
+        'instagram',
+        'facebook',
+        'telegram',
+        'whatsappUrl',
+        'website',
+        'x',
+        'linkedin',
+        'operationOpen',
+        'operationClose',
+      ].forEach((k) => fd.append(k, f[k]));
+      if (f.inMarketSince) fd.append('inMarketSince', f.inMarketSince);
       fd.append('onlineDelivery', f.onlineDelivery);
       fd.append('panIndia', f.panIndia);
       fd.append('operationDays', JSON.stringify(f.operationDays));
@@ -184,7 +234,12 @@ export default function CreateProfile() {
       fd.append('keepGallery', JSON.stringify(gallery.filter((g) => g.path).map((g) => g.path)));
       if (shopImageFile) fd.append('shopImage', shopImageFile);
       else if (shopImagePath) fd.append('keepShopImage', shopImagePath);
+      if (coverImageFile) fd.append('coverImage', coverImageFile);
+      else if (coverImagePath) fd.append('keepCoverImage', coverImagePath);
       gallery.filter((g) => g.file).forEach((g) => fd.append('gallery', g.file));
+      products.forEach((p, i) => {
+        if (p.imageFile) fd.append(`productImage_${i}`, p.imageFile);
+      });
 
       const res = editMode ? await profileService.update(profileId, fd) : await profileService.create(fd);
       markProfileCreated(res.profile.pageSlug);
@@ -196,6 +251,8 @@ export default function CreateProfile() {
       setBusy(false);
     }
   };
+
+  if (user?.role === 'admin') return null;
 
   if (loading)
     return (
@@ -212,8 +269,10 @@ export default function CreateProfile() {
         <p className="mt-1 text-sm text-slate-500">This information builds your public business page on Call2Now.</p>
 
         <form onSubmit={submit} className="mt-8 space-y-8" noValidate>
-          <section className="card space-y-4 p-6">
-            <h2 className="section-title">Business information</h2>
+          <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
+            <h2 className="border-b border-slate-100 pb-3 text-sm font-extrabold uppercase tracking-wider text-slate-700">
+              Business information
+            </h2>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="relative">
@@ -307,8 +366,9 @@ export default function CreateProfile() {
                 {errors.address && <p className="err">{errors.address}</p>}
               </div>
               <div>
-                <label className="label">In market since</label>
+                <label className="label">In market since (optional)</label>
                 <select className="input" value={f.inMarketSince} onChange={set('inMarketSince')}>
+                  <option value="">Prefer not to say</option>
                   {Array.from({ length: 51 }, (_, i) => new Date().getFullYear() - i).map((y) => (
                     <option key={y} value={y}>
                       {y}
@@ -328,10 +388,39 @@ export default function CreateProfile() {
                 <label className="label">Map location URL</label>
                 <input className="input" value={f.mapUrl} onChange={set('mapUrl')} placeholder="https://maps.google.com/..." />
               </div>
-              <div>
-                <label className="label">Image of the shop</label>
+              <div className="sm:col-span-2">
+                <label className="label">Social links (all optional)</label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <input className="input" value={f.instagram} onChange={set('instagram')} placeholder="Instagram URL" />
+                  <input className="input" value={f.facebook} onChange={set('facebook')} placeholder="Facebook URL" />
+                  <input className="input" value={f.whatsappUrl} onChange={set('whatsappUrl')} placeholder="WhatsApp URL" />
+                  <input className="input" value={f.x} onChange={set('x')} placeholder="X (Twitter) URL" />
+                  <input className="input" value={f.linkedin} onChange={set('linkedin')} placeholder="LinkedIn URL" />
+                  <input className="input" value={f.telegram} onChange={set('telegram')} placeholder="Telegram URL" />
+                  <input className="input" value={f.website} onChange={set('website')} placeholder="Website URL" />
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="label">Cover picture (landscape)</label>
                 <ImageInput
-                  label="Upload shop image"
+                  shape="landscape"
+                  cropAspect={16 / 9}
+                  label="Upload cover picture"
+                  value={coverImageFile}
+                  preview={coverImagePath}
+                  onChange={(file) => {
+                    setCoverImageFile(file);
+                    if (file) setCoverImagePath(null);
+                  }}
+                />
+              </div>
+              <div>
+                <label className="label">Profile picture (portrait)</label>
+                <ImageInput
+                  shape="portrait"
+                  cropAspect={3 / 4}
+                  cropRadius="rounded-2xl"
+                  label="Upload profile picture"
                   value={shopImageFile}
                   preview={shopImagePath}
                   onChange={(file) => {
@@ -402,18 +491,18 @@ export default function CreateProfile() {
             </div>
           </section>
 
-          <section className="card p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="section-title">Gallery</h2>
+          <section className="rounded-2xl border border-slate-200 bg-white p-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-700">Gallery</h2>
               <span className="text-xs font-semibold text-slate-400">{gallery.length}/{MAX_GALLERY} photos</span>
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
+            <div className="mt-4 grid grid-cols-3 gap-3 sm:gap-4">
               {gallery.map((g) => (
                 <div key={g.id} className="relative">
-                  <img src={g.file ? URL.createObjectURL(g.file) : assetUrl(g.path)} alt="gallery" className="h-24 w-full rounded-xl object-cover" />
+                  <img src={g.file ? URL.createObjectURL(g.file) : assetUrl(g.path)} alt="gallery" className="aspect-[3/4] w-full rounded-xl object-cover" />
                   <button
                     type="button"
-                    onClick={() => setGallery((gs) => gs.filter((x) => x.id !== g.id))}
+                    onClick={() => updateGallery(gallery.filter((x) => x.id !== g.id))}
                     className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-gred text-xs font-bold text-white shadow"
                     aria-label="Remove photo"
                   >
@@ -431,16 +520,16 @@ export default function CreateProfile() {
                 multiple
                 className="hidden"
                 onChange={(e) => {
-                  Array.from(e.target.files || []).forEach(addGallery);
+                  addGallery(Array.from(e.target.files || []));
                   e.target.value = '';
                 }}
               />
             </div>
           </section>
 
-          <section className="card space-y-5 p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="section-title">Products</h2>
+          <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-700">Products</h2>
               <span className="text-xs font-semibold text-slate-400">{products.length}/{MAX_PRODUCTS} · 1 compulsory</span>
             </div>
             {errors.products && <p className="err">{errors.products}</p>}
@@ -484,6 +573,8 @@ export default function CreateProfile() {
                     </div>
                   </div>
                   <ImageInput
+                    shape="tall"
+                    cropAspect={4 / 5}
                     label="Product image"
                     value={p.imageFile}
                     preview={p.imagePath}
@@ -512,6 +603,18 @@ export default function CreateProfile() {
           </div>
         </form>
       </main>
+      {cropQueue.length > 0 && (
+        <ImageCropper
+          file={cropQueue[0]}
+          aspect={3 / 4}
+          radius="rounded-xl"
+          onCancel={() => setCropQueue((q) => q.slice(1))}
+          onConfirm={(cf) => {
+            updateGallery([...galleryRef.current, { id: ++gid.current, file: cf }]);
+            setCropQueue((q) => q.slice(1));
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -521,7 +624,7 @@ function AddTile({ onClick, label }) {
     <button
       type="button"
       onClick={onClick}
-      className="grid h-24 w-full place-items-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-xs font-semibold text-slate-400 transition hover:border-primary hover:text-primary"
+      className="grid aspect-[3/4] w-full place-items-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-xs font-semibold text-slate-400 transition hover:border-primary hover:text-primary"
     >
       {label}
     </button>

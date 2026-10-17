@@ -7,11 +7,14 @@ export default function ProfileCard({ profile }) {
   const img = assetUrl(profile.shopImage);
   return (
     <Link to={`/b/${profile.pageSlug}`} className="card block overflow-hidden transition hover:-translate-y-1 hover:shadow-lg">
-      <div className={`relative grid h-28 place-items-center ${p.bg}`} style={img ? undefined : undefined}>
+      <div className={`relative grid h-32 place-items-center overflow-hidden ${p.bg}`}>
         {img ? (
           <img src={img} alt={profile.shopName} className="h-full w-full object-cover" />
         ) : (
-          <span className={`px-4 text-center text-sm font-bold ${p.text}`}>{profile.shopName}</span>
+          <div className="flex flex-col items-center px-4 text-center">
+            <span className={`text-3xl font-extrabold ${p.text}`}>{initialsOf(profile.shopName)}</span>
+            <span className={`mt-1 line-clamp-2 text-xs font-semibold ${p.text}`}>{profile.shopName}</span>
+          </div>
         )}
       </div>
       <div className="relative px-4 pb-4">
