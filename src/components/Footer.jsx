@@ -66,7 +66,7 @@ export default function Footer() {
             </li>
             <li>
               <p className="font-semibold text-slate-200">Branch office</p>
-              <p className="mt-0.5 text-left leading-6 text-slate-400">Raipur Pandit, Uttar Pradesh 273309</p>
+              <p className="mt-0.5 text-left leading-6 text-slate-400">Raipur, Uttar Pradesh 273309</p>
               <a
                 href="https://maps.app.goo.gl/NVcbgdpkiQec8Uhx8?g_st=awb"
                 target="_blank"

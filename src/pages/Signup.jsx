@@ -119,9 +119,13 @@ export default function Signup() {
         devCode={otp?.devCode}
         onVerify={verify}
         onResend={async () => {
-          const res = await authService.resendOtp({ email: form.email, purpose: 'signup' });
-          setOtp((o) => ({ ...o, devCode: res.devCode }));
-          toast('New OTP sent', 'info');
+          try {
+            const res = await authService.resendOtp({ email: form.email, purpose: 'signup' });
+            setOtp((o) => ({ ...o, devCode: res.devCode }));
+            toast('New OTP sent', 'info');
+          } catch (e) {
+            toast(errMsg(e), 'error');
+          }
         }}
         onClose={() => setOtp(null)}
       />
