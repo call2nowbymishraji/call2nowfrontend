@@ -9,7 +9,7 @@ const SOCIALS = [
 export default function Footer() {
   return (
     <footer className="mt-16 bg-slate-900 text-slate-300">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <img src="/logo.png" alt="call2now" className="h-8 w-auto brightness-110" />
           <p className="mt-3 text-sm text-slate-400">Register your business profile and get discovered by your city.</p>
@@ -19,7 +19,30 @@ export default function Footer() {
           <ul className="space-y-2 text-sm">
             <li>call2nowbymishraji@gmail.com</li>
             <li>+91 9305035828</li>
-            <li>Indore, Madhya Pradesh, India</li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">Our Offices</h4>
+          <ul className="space-y-3 text-sm">
+            <li>
+              <p className="font-semibold text-slate-200">Head office</p>
+              <p className="mt-0.5 text-slate-400">
+                554, Rani Path, Parswanath Colony, Rani Sati Nagar, Nirman Nagar, Brijlalpura, Jaipur, Jaipur Nagar Nigam
+                Area, Rajasthan 302019, India
+              </p>
+            </li>
+            <li>
+              <p className="font-semibold text-slate-200">Branch office</p>
+              <p className="mt-0.5 text-slate-400">Raipur Pandit, Uttar Pradesh 273309</p>
+              <a
+                href="https://maps.app.goo.gl/NVcbgdpkiQec8Uhx8?g_st=awb"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-xs font-semibold text-gblue hover:underline"
+              >
+                View on Google Maps
+              </a>
+            </li>
           </ul>
         </div>
         <div>
