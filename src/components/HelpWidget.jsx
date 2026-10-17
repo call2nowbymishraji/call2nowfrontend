@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 const WHATSAPP_URL = 'https://wa.me/message/LOPV2VBZKKF4E1';
-const EMAIL_URL = 'mailto:call2nowbymishraji@gmail.com';
+const EMAIL_URL = 'mailto:helpcall2now@gmail.com';
 
 export default function HelpWidget() {
   const [open, setOpen] = useState(false);

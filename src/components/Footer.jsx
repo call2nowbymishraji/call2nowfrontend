@@ -50,7 +50,7 @@ export default function Footer() {
           </div>
           <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">Contact Us</h4>
           <ul className="space-y-2 text-sm">
-            <li>call2nowbymishraji@gmail.com</li>
+            <li>helpcall2now@gmail.com</li>
             <li>+91 9305035828</li>
           </ul>
         </div>

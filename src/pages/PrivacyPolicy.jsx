@@ -75,7 +75,7 @@ export default function PrivacyPolicy() {
         </Section>
 
         <Section title="Contact us">
-          <p>Email: call2nowbymishraji@gmail.com</p>
+          <p>Email: helpcall2now@gmail.com</p>
           <p>Phone and WhatsApp: +91 9305035828</p>
           <p>Head office: 554, Rani Path, Parswanath Colony, Rani Sati Nagar, Nirman Nagar, Brijlalpura, Jaipur, Rajasthan 302019, India</p>
           <p>Branch office: Raipur, Uttar Pradesh 273309</p>
