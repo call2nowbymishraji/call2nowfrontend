@@ -6,3 +6,4 @@ dist/
 *.log
 *.zip
 .DS_Store
+system-commandline-sentinel-files/
