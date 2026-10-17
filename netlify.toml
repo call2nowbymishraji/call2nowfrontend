@@ -1,0 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  VITE_API_URL = "https://call2nowbackendend.onrender.com/api"
+  VITE_API_ORIGIN = "https://call2nowbackendend.onrender.com"
+  VITE_GOOGLE_CLIENT_ID = "1076810103836-0r02m5i9qqu6vn5g15tcp8vis3df39te.apps.googleusercontent.com"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
