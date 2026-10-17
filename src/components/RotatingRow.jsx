@@ -16,6 +16,8 @@ export default function RotatingRow({ items, target = 2, stepMs = 2500, render, 
   }, []);
 
   const visible = Math.max(1, Math.min(items.length, wide ? target : 1));
+  const lone = items.length === 1 && wide && target > 1;
+  const cols = lone ? target : visible;
   const canRotate = items.length > visible;
   const items2 = useMemo(() => items.concat(items.slice(0, visible)), [items, visible]);
 
@@ -56,7 +58,7 @@ export default function RotatingRow({ items, target = 2, stepMs = 2500, render, 
       <div className="overflow-hidden">
         <div
           ref={trackRef}
-          className="flex"
+          className={`flex ${lone && !canRotate ? 'justify-center' : ''}`}
           style={{
             gap: `${GAP}px`,
             transform: `translateX(-${offset}px)`,
@@ -67,7 +69,7 @@ export default function RotatingRow({ items, target = 2, stepMs = 2500, render, 
             <div
               key={i}
               className={`shrink-0 ${aspect}`}
-              style={{ width: `calc((100% - ${GAP * (visible - 1)}px) / ${visible})` }}
+              style={{ width: `calc((100% - ${GAP * (cols - 1)}px) / ${cols})` }}
             >
               {render(it, i % items.length)}
             </div>
