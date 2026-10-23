@@ -21,7 +21,6 @@ export const CATEGORIES = [
   'Pets & Veterinary',
   'Travel & Tourism',
   'Banks & Finance',
-  'Other',
 ];
 
 const PASTELS = [

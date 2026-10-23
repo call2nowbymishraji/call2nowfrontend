@@ -18,6 +18,9 @@ export default function AdminDashboard() {
   const [profiles, setProfiles] = useState([]);
   const [slides, setSlides] = useState([]);
   const [ads, setAds] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [catName, setCatName] = useState('');
+  const [editingCat, setEditingCat] = useState(null);
   const [featuredLive, setFeaturedLive] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -31,6 +34,7 @@ export default function AdminDashboard() {
     adminService.listSlides().then((d) => setSlides(d.slides || [])).catch(() => {});
     adminService.listAds().then((d) => setAds(d.ads || [])).catch(() => {});
     adminService.getSettings().then((d) => setFeaturedLive(!!d.settings?.featuredLive)).catch(() => {});
+    adminService.listCategories().then((d) => setCategories(d.categories || [])).catch(() => {});
   }, []);
 
   useEffect(load, [load]);
@@ -74,6 +78,28 @@ export default function AdminDashboard() {
     setAdForm({ title: '', subtitle: '', ctaText: '', linkUrl: '', placement: 'popup', imageFile: null });
   };
 
+  const addCategory = async (e) => {
+    e.preventDefault();
+    if (catName.trim().length < 2) return toast('Category name is too short', 'error');
+    await run(() => adminService.addCategory(catName.trim()), 'Category added');
+    setCatName('');
+  };
+
+  const saveCategoryRename = async (id) => {
+    const name = (editingCat?.name || '').trim();
+    if (name.length < 2) return toast('Category name is too short', 'error');
+    await run(() => adminService.renameCategory(id, name), 'Category renamed, profiles updated');
+    setEditingCat(null);
+  };
+
+  const deleteCategory = async (cat) => {
+    const extra = cat.profiles
+      ? ` ${cat.profiles} profile(s) currently use it. Their pages keep the label, but it will disappear from pickers and filters.`
+      : '';
+    if (!window.confirm(`Delete category "${cat.name}"?${extra}`)) return;
+    await run(() => adminService.deleteCategory(cat._id), 'Category deleted');
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -86,6 +112,7 @@ export default function AdminDashboard() {
             ['profiles', 'Profiles & products'],
             ['slides', 'Front-page slider'],
             ['ads', 'Advertisements'],
+            ['categories', 'Categories'],
           ].map(([k, label]) => (
             <button
               key={k}
@@ -336,6 +363,70 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {tab === 'categories' && (
+          <div className="mt-6 space-y-6">
+            <form onSubmit={addCategory} className="card flex flex-wrap items-center gap-3 p-5">
+              <input
+                className="input flex-1"
+                placeholder="New category name (e.g. Toys & Gifts)"
+                value={catName}
+                onChange={(e) => setCatName(e.target.value)}
+              />
+              <button type="submit" disabled={busy} className="btn-primary">
+                Add category
+              </button>
+            </form>
+            <div className="card divide-y divide-slate-100">
+              {categories.length === 0 && <p className="p-8 text-center text-sm text-slate-400">No categories yet.</p>}
+              {categories.map((c) => (
+                <div key={c._id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                  {editingCat?.id === c._id ? (
+                    <>
+                      <input
+                        className="input flex-1"
+                        value={editingCat.name}
+                        onChange={(e) => setEditingCat({ id: c._id, name: e.target.value })}
+                      />
+                      <button className="btn-primary !py-2 text-sm" disabled={busy} onClick={() => saveCategoryRename(c._id)}>
+                        Save
+                      </button>
+                      <button className="btn-outline !py-2 text-sm" onClick={() => setEditingCat(null)}>
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <p className="font-bold text-slate-800">{c.name}</p>
+                        <p className="text-xs text-slate-500">
+                          {c.profiles} profile{c.profiles === 1 ? '' : 's'} using this
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button className="btn-outline !py-2 text-sm" onClick={() => setEditingCat({ id: c._id, name: c.name })}>
+                          Rename
+                        </button>
+                        <button
+                          className="rounded-xl bg-gred/10 px-4 py-2 text-sm font-bold text-gred transition hover:bg-gred/20"
+                          disabled={busy}
+                          onClick={() => deleteCategory(c)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs leading-5 text-slate-500">
+              Users always keep the "Others / custom category" option on the profile form, so they can type a category of
+              their own even if it is not listed here. Renaming a category also updates every profile that uses the old
+              name. Deleting removes the option from pickers and filters, but existing profiles keep showing their label.
+            </p>
           </div>
         )}
       </main>

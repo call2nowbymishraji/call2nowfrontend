@@ -1,16 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../utils/categories.js';
+import categoryService from '../services/categoryService.js';
 
 export default function SearchBar({ initial = {}, compact = false }) {
   const [q, setQ] = useState(initial.q || '');
   const [category, setCategory] = useState(initial.category || '');
   const [location, setLocation] = useState(initial.location || '');
   const [listening, setListening] = useState(false);
+  const [cats, setCats] = useState(CATEGORIES);
   const recRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => () => recRef.current?.stop?.(), []);
+
+  useEffect(() => {
+    categoryService
+      .list()
+      .then((list) => list.length && setCats(list))
+      .catch(() => {});
+  }, []);
 
   const startVoice = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -75,7 +84,8 @@ export default function SearchBar({ initial = {}, compact = false }) {
           <div className="relative flex-1">
             <select value={category} onChange={(e) => setCategory(e.target.value)} className="input !rounded-full !py-2.5 text-sm">
               <option value="">All categories</option>
-              {CATEGORIES.map((c) => (
+              {category && !cats.includes(category) && <option value={category}>{category}</option>}
+              {cats.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>

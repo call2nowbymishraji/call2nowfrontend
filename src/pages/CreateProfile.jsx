@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar.jsx';
 import ImageInput from '../components/ImageInput.jsx';
 import ImageCropper from '../components/ImageCropper.jsx';
 import profileService from '../services/profileService.js';
+import categoryService from '../services/categoryService.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { CATEGORIES } from '../utils/categories.js';
@@ -60,6 +61,7 @@ export default function CreateProfile() {
   });
   const [catQuery, setCatQuery] = useState('');
   const [catOpen, setCatOpen] = useState(false);
+  const [cats, setCats] = useState(CATEGORIES);
   const [shopImageFile, setShopImageFile] = useState(null);
   const [shopImagePath, setShopImagePath] = useState(null);
   const [coverImageFile, setCoverImageFile] = useState(null);
@@ -86,16 +88,24 @@ export default function CreateProfile() {
   };
 
   useEffect(() => {
+    categoryService
+      .list()
+      .then((list) => list.length && setCats(list))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (!editMode) return;
-    profileService
-      .mine()
-      .then((d) => {
+    Promise.all([profileService.mine(), categoryService.list().catch(() => [])])
+      .then(([d, list]) => {
+        const known = list.length ? list : CATEGORIES;
+        setCats(known);
         const p = d.profile;
         setProfileId(p._id);
         setF((s) => ({
           ...s,
-          category: CATEGORIES.includes(p.category) ? p.category : p.category === 'Other' ? 'Other' : p.category,
-          customCategory: p.category === 'Other' ? p.customCategory || '' : CATEGORIES.includes(p.category) ? '' : p.category,
+          category: known.includes(p.category) ? p.category : 'Other',
+          customCategory: p.category === 'Other' ? p.customCategory || '' : known.includes(p.category) ? '' : p.category,
           shopName: p.shopName,
           ownerName: p.ownerName,
           phone: p.phone,
@@ -148,8 +158,8 @@ export default function CreateProfile() {
   const slug = slugify(f.shopName);
   const catSuggestions = useMemo(() => {
     const q = catQuery.toLowerCase();
-    return CATEGORIES.filter((c) => c.toLowerCase().includes(q));
-  }, [catQuery]);
+    return cats.filter((c) => c.toLowerCase().includes(q));
+  }, [catQuery, cats]);
 
   const setProduct = (i, k, v) =>
     setProducts((ps) => ps.map((p, j) => (j === i ? { ...p, [k]: v } : p)));

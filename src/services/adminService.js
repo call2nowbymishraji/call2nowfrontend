@@ -24,4 +24,8 @@ export default {
       .then((r) => r.data),
   toggleAd: (id, active) => api.put(`/admin/ads/${id}`, { active }).then((r) => r.data),
   deleteAd: (id) => api.delete(`/admin/ads/${id}`).then((r) => r.data),
+  listCategories: () => api.get('/admin/categories').then((r) => r.data),
+  addCategory: (name) => api.post('/admin/categories', { name }).then((r) => r.data),
+  renameCategory: (id, name) => api.put(`/admin/categories/${id}`, { name }).then((r) => r.data),
+  deleteCategory: (id) => api.delete(`/admin/categories/${id}`).then((r) => r.data),
 };
