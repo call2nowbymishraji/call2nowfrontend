@@ -17,9 +17,10 @@ export default function ProfileCard({ profile }) {
 
   return (
     <div className="pc h-full">
-      <div className="card pc-body h-full overflow-hidden bg-white transition hover:-translate-y-1 hover:shadow-lg">
+      <div className="card pc-body relative h-full overflow-hidden bg-white transition hover:-translate-y-1 hover:shadow-lg">
         <div className="flex min-w-0 flex-1 flex-col">
-          <Link to={href} aria-label={`Open ${profile.shopName}`}>
+          {/* Stretched link: the ::after blankets the card so any click except the z-[2] contact buttons opens the profile. */}
+          <Link to={href} aria-label={`Open ${profile.shopName}`} className="after:absolute after:inset-0 after:z-[1] after:content-['']">
             <h3 className="pc-name truncate font-extrabold tracking-tight text-slate-900">{profile.shopName}</h3>
           </Link>
 
@@ -53,7 +54,7 @@ export default function ProfileCard({ profile }) {
             {tel && (
               <a
                 href={tel}
-                className="pc-btn pc-btn-stack bg-primary text-white transition hover:bg-primary/90"
+                className="pc-btn pc-btn-stack relative z-[2] bg-primary text-white transition hover:bg-primary/90"
                 aria-label={`Call ${profile.shopName}`}
                 title={`Call ${profile.shopName}`}
               >
@@ -66,7 +67,7 @@ export default function ProfileCard({ profile }) {
                 href={wa}
                 target="_blank"
                 rel="noreferrer"
-                className="pc-btn pc-btn-stack bg-ggreen text-white transition hover:brightness-110"
+                className="pc-btn pc-btn-stack relative z-[2] bg-ggreen text-white transition hover:brightness-110"
                 aria-label={`WhatsApp ${profile.shopName}`}
                 title={`WhatsApp ${profile.shopName}`}
               >
@@ -80,7 +81,7 @@ export default function ProfileCard({ profile }) {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={`Get directions to ${profile.shopName}`}
-                className={`pc-btn pc-btn-grow border transition hover:brightness-95 ${p.soft}`}
+                className={`pc-btn pc-btn-grow relative z-[2] border transition hover:brightness-95 ${p.soft}`}
               >
                 <PinIcon className="pc-btn-icon" />
                 <span className="pc-btn-label">Visit for best price</span>

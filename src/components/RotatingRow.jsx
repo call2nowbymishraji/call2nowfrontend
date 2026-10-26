@@ -20,7 +20,9 @@ export default function RotatingRow({ items, target = 2, stepMs = 2500, render, 
   const visible = Math.max(1, Math.min(items.length, wide ? target : 1));
   const lone = items.length === 1 && wide && target > 1;
   const cols = lone ? target : visible;
-  const canRotate = items.length > visible;
+  // The track carries a second copy of the first `visible` items, so a row whose items
+  // all still fit can cycle too: a tile leaves on the left while its copy enters right.
+  const canRotate = items.length > 1;
   const items2 = useMemo(() => items.concat(items.slice(0, visible)), [items, visible]);
 
   useEffect(() => {

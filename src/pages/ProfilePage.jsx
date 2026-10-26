@@ -12,9 +12,8 @@ import { callLink, waLink, mapsLink } from '../utils/contact.js';
 import { assetUrl, errMsg } from '../services/api.js';
 import Seo from '../seo/Seo.jsx';
 import { missingProfileSeo, privateScreenSeo, profilePendingSeo, profileSeo } from '../seo/pages.js';
-import { ROBOTS, SITE_URL, absoluteUrl } from '../seo/site.js';
+import { ROBOTS, absoluteUrl } from '../seo/site.js';
 
-const PUBLIC_HOST = SITE_URL.replace(/^https?:\/\//, '');
 const OWNER_PRIVATE = privateScreenSeo('/profile');
 
 // The owner view shows the same business plus private context, so it is never indexed and
@@ -142,6 +141,10 @@ export default function ProfilePage({ ownerMode = false }) {
                   <span className="text-3xl font-extrabold leading-tight text-white sm:text-4xl">{profile.shopName}</span>
                 </div>
               )}
+              {/* xl is where the photo column gains the empty space below it. */}
+              <div className="mt-6 hidden flex-wrap gap-2 text-sm font-semibold xl:flex">
+                <DeliveryBadges profile={profile} />
+              </div>
             </div>
 
             <div>
@@ -242,12 +245,12 @@ export default function ProfilePage({ ownerMode = false }) {
                   value={profile.operationOpen && profile.operationClose ? `${profile.operationOpen} to ${profile.operationClose}` : ''}
                 />
                 {profile.gst && <InfoCell label="GST" value={profile.gst} />}
-                <InfoCell label="Page URL" value={`${PUBLIC_HOST}/b/${profile.pageSlug}`} />
+                <PageUrlCell url={absoluteUrl(`/b/${profile.pageSlug}`)} shopName={profile.shopName} />
               </div>
 
-              <div className="mt-7 flex flex-wrap gap-2 text-sm font-semibold">
-                <Badge on={profile.onlineDelivery} yes="Online delivery available" no="No online delivery" />
-                <Badge on={profile.panIndia} yes="Delivery pan India" no="Local delivery only" />
+              {/* Below xl the photo stacks above the details, so the pills stay at the end. */}
+              <div className="mt-7 flex flex-wrap gap-2 text-sm font-semibold xl:hidden">
+                <DeliveryBadges profile={profile} />
               </div>
             </div>
           </div>
@@ -324,6 +327,84 @@ function InfoCell({ label, value }) {
     <div className="border-b border-slate-100 pb-2">
       <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</span>
       <p className="mt-0.5 text-sm font-semibold text-slate-700">{value || 'Not set'}</p>
+    </div>
+  );
+}
+
+function DeliveryBadges({ profile }) {
+  return (
+    <>
+      <Badge on={profile.onlineDelivery} yes="Online delivery available" no="No online delivery" />
+      <Badge on={profile.panIndia} yes="Delivery pan India" no="Local delivery only" />
+    </>
+  );
+}
+
+// navigator.clipboard only exists in a secure context, so plain http previews still copy.
+function legacyCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:-40px;opacity:0';
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch {
+    ok = false;
+  }
+  ta.remove();
+  return ok;
+}
+
+function PageUrlCell({ url, shopName }) {
+  const [copied, setCopied] = useState(false);
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+  async function copy() {
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(url);
+      ok = true;
+    } catch {
+      ok = legacyCopy(url);
+    }
+    if (!ok) return;
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  }
+
+  function share() {
+    if (canShare) {
+      navigator.share({ title: shopName, text: `${shopName} on Call2Now`, url }).catch(() => {});
+      return;
+    }
+    // Browsers without the share API (desktop Electron, older Safari) still get a sheet.
+    window.open(`https://wa.me/?text=${encodeURIComponent(`${shopName} on Call2Now: ${url}`)}`, '_blank', 'noopener');
+  }
+
+  const action =
+    'inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:border-primary hover:text-primary';
+
+  return (
+    <div className="border-b border-slate-100 pb-2 sm:col-span-2">
+      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Page URL</span>
+      <div className="mt-1 flex flex-wrap items-center gap-2">
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-700" title={url}>
+          {url.replace(/^https?:\/\//, '')}
+        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          <button type="button" onClick={copy} className={action} aria-label="Copy page URL">
+            {copied ? <CheckIcon /> : <CopyIcon />}
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+          <button type="button" onClick={share} className={action} aria-label="Share page URL" title={canShare ? 'Share this page' : 'Share this page on WhatsApp'}>
+            <ShareIcon />
+            Share
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -463,6 +544,33 @@ function ChevronLeftIcon() {
   return (
     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <polyline points="15 18 9 12 15 6" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="8" y="8" width="14" height="14" rx="2" ry="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6 9 17l-4-4" />
+    </svg>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+      <polyline points="16 6 12 2 8 6" />
+      <line x1="12" x2="12" y1="2" y2="15" />
     </svg>
   );
 }
