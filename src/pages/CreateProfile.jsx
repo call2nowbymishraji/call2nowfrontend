@@ -8,6 +8,7 @@ import profileService from '../services/profileService.js';
 import categoryService from '../services/categoryService.js';
 import geoService from '../services/geoService.js';
 import { DEFAULT_COUNTRY } from '../utils/geo.js';
+import { locateMe } from '../utils/locate.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { CATEGORIES } from '../utils/categories.js';
@@ -82,6 +83,8 @@ export default function CreateProfile() {
   const [cities, setCities] = useState([]);
   const [cityQuery, setCityQuery] = useState('');
   const [cityOpen, setCityOpen] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState('');
   const [shopImageFile, setShopImageFile] = useState(null);
   const [shopImagePath, setShopImagePath] = useState(null);
   const [gallery, setGallery] = useState([]); // { id, file?, path? }
@@ -241,6 +244,33 @@ export default function CreateProfile() {
       toast(`Only ${MAX_GALLERY} gallery photos allowed. ${valid.length - room} extra photo(s) were not added`, 'error');
     if (accepted.length) setCropQueue((q) => [...q, ...accepted]);
   };
+
+  // The pin is the point of the button, so it always wins. The address boxes keep
+  // anything already typed: pressing this from home must not overwrite the shop.
+  async function locate() {
+    setLocating(true);
+    setLocateError('');
+    try {
+      const here = await locateMe();
+      setF((s) => ({
+        ...s,
+        mapUrl: here.mapUrl,
+        address: s.address.trim() ? s.address : here.address,
+        state: s.state || here.state,
+        city: s.city || here.city,
+        pincode: s.pincode || here.pincode,
+      }));
+      if (here.accuracy > 200) {
+        toast(`Position is rough to about ${Math.round(here.accuracy)} m. Check the pin before you save.`, 'info');
+      } else {
+        toast('Map link set from your position. Edit anything that looks wrong.', 'success');
+      }
+    } catch (e) {
+      setLocateError(e.message);
+    } finally {
+      setLocating(false);
+    }
+  }
 
   const validate = () => {
     const e = {};
@@ -640,7 +670,25 @@ export default function CreateProfile() {
               </div>
               <div className="col-span-full">
                 <label className="label">Map location URL</label>
-                <input aria-label="Map location URL" className="input" value={f.mapUrl} onChange={set('mapUrl')} placeholder="https://maps.google.com/..." />
+                <div className="flex flex-wrap items-center gap-2">
+                  <input aria-label="Map location URL" className="input min-w-0 grow shrink basis-44" value={f.mapUrl} onChange={set('mapUrl')} placeholder="https://maps.google.com/..." />
+                  <button
+                    type="button"
+                    onClick={locate}
+                    disabled={locating}
+                    className="btn-outline shrink-0 !px-4 !py-3 text-sm"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                    {locating ? 'Locating...' : 'Locate me'}
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  Best used while standing at your shop. It fills the map link and any empty address fields, and never replaces what you typed.
+                </p>
+                {locateError && <p className="err">{locateError}</p>}
               </div>
               <div className="col-span-full">
                 <label className="label">Social links (all optional)</label>
