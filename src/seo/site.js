@@ -9,10 +9,17 @@ const configuredSiteUrl = String(viteEnv.VITE_SITE_URL || nodeEnv.SITE_URL || 'h
 
 export const SITE_URL = configuredSiteUrl.replace(/\/+$/, '');
 
+// Netlify serves each generated page from a directory index, so /b/slug answers with a 301 to
+// /b/slug/. A canonical that points at the pre-redirect form contradicts the document Google
+// actually stores, so the redirected-to form is declared everywhere instead: sitemap <loc>,
+// <link rel=canonical> and the JSON-LD urls all end in a slash. Asset urls keep their
+// extension because a slash would not exist for them.
 export function absoluteUrl(path = '/') {
   if (/^https?:\/\//i.test(path)) return path;
   const clean = path.startsWith('/') ? path : `/${path}`;
-  return `${SITE_URL}${clean}`;
+  const url = `${SITE_URL}${clean}`;
+  if (clean === '/' || clean.endsWith('/') || /\.[a-z0-9]{2,5}$/i.test(clean)) return url;
+  return `${url}/`;
 }
 
 export const BRAND = 'Call2Now';

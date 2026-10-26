@@ -9,11 +9,16 @@ const API_ORIGIN = String(
 const URL_LIMIT = 50000;
 const VALID_SLUG = /^[a-z0-9][a-z0-9-]*$/i;
 
+// Each generated page is a directory index, so Netlify answers /b/slug with a 301 to
+// /b/slug/. The sitemap declares the form that returns 200, which is also the form every
+// canonical tag on the page carries.
+const pageUrl = (path) => (path.endsWith('/') ? `${SITE_URL}${path}` : `${SITE_URL}${path}/`);
+
 // Effective dates of the two legal pages, matching the copy shown on them.
 const STATIC_URLS = [
-  { loc: `${SITE_URL}/`, lastmod: '' },
-  { loc: `${SITE_URL}/privacy`, lastmod: '2026-10-17' },
-  { loc: `${SITE_URL}/terms`, lastmod: '2026-10-17' },
+  { loc: pageUrl('/'), lastmod: '' },
+  { loc: pageUrl('/privacy'), lastmod: '2026-10-17' },
+  { loc: pageUrl('/terms'), lastmod: '2026-10-17' },
 ];
 
 const escapeXml = (value) =>
@@ -81,7 +86,7 @@ export default async (request, context) => {
     profiles.forEach((profile) => {
       const slug = String(profile.slug || '').trim();
       if (!VALID_SLUG.test(slug)) return;
-      add(`${SITE_URL}/b/${encodeURIComponent(slug)}`, isoDate(profile.lastmod));
+      add(pageUrl(`/b/${encodeURIComponent(slug)}`), isoDate(profile.lastmod));
     });
     if (truncated) notes.push(`Listed ${entries.length} URLs; the profile list reached its limit, so some business pages may be missing.`);
   } catch (error) {
