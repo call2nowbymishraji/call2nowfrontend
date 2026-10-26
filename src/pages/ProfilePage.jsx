@@ -6,8 +6,23 @@ import RotatingRow from '../components/RotatingRow.jsx';
 import SideAdRail from '../components/SideAds.jsx';
 import profileService from '../services/profileService.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { paletteFor, initialsOf } from '../utils/categories.js';
+import { paletteFor } from '../utils/categories.js';
+import { formatAddress } from '../utils/geo.js';
+import { callLink, waLink, mapsLink } from '../utils/contact.js';
 import { assetUrl, errMsg } from '../services/api.js';
+import Seo from '../seo/Seo.jsx';
+import { missingProfileSeo, privateScreenSeo, profilePendingSeo, profileSeo } from '../seo/pages.js';
+import { ROBOTS, SITE_URL, absoluteUrl } from '../seo/site.js';
+
+const PUBLIC_HOST = SITE_URL.replace(/^https?:\/\//, '');
+const OWNER_PRIVATE = privateScreenSeo('/profile');
+
+// The owner view shows the same business plus private context, so it is never indexed and
+// it points Google at the public /b/:slug URL as the single canonical version.
+function ownerSeo(profile) {
+  if (!profile) return OWNER_PRIVATE;
+  return { ...profileSeo(profile), robots: ROBOTS.hidden, canonical: absoluteUrl(`/b/${profile.pageSlug}`), jsonLd: [] };
+}
 
 export default function ProfilePage({ ownerMode = false }) {
   const { slug } = useParams();
@@ -29,6 +44,7 @@ export default function ProfilePage({ ownerMode = false }) {
   if (loading)
     return (
       <div className="grid min-h-screen place-items-center">
+        <Seo {...(ownerMode ? ownerSeo(null) : profilePendingSeo(slug))} />
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-primary" />
       </div>
     );
@@ -36,6 +52,7 @@ export default function ProfilePage({ ownerMode = false }) {
   if (!profile)
     return (
       <div className="min-h-screen">
+        <Seo {...(ownerMode ? ownerSeo(null) : missingProfileSeo(slug))} />
         <Navbar />
         <div className="mx-auto max-w-md px-4 py-24 text-center">
           <h1 className="text-xl font-bold text-slate-800">{ownerMode ? 'You have no profile yet' : 'Profile not found'}</h1>
@@ -51,14 +68,16 @@ export default function ProfilePage({ ownerMode = false }) {
 
   const p = paletteFor(profile.category || profile.shopName);
   const isOwner = user && String(profile.user?._id || profile.user) === String(user._id);
-  const banner = assetUrl(profile.shopImage);
-  const cover = assetUrl(profile.coverImage);
-  const wa = profile.whatsappUrl || `https://wa.me/91${(profile.whatsapp || profile.phone || '').replace(/\D/g, '')}`;
+  const banner = assetUrl(profile.shopImage, 640);
+  const wa = waLink(profile);
+  const tel = callLink(profile);
+  const maps = mapsLink(profile);
   const products = profile.products || [];
   const gallery = (profile.gallery || []).slice(0, 9);
 
   return (
     <div className="flex min-h-screen flex-col">
+      <Seo {...(ownerMode ? ownerSeo(profile) : profileSeo(profile))} />
       <Navbar />
       <div className="flex flex-1 items-stretch">
         <SideAdRail side="left" />
@@ -91,16 +110,36 @@ export default function ProfilePage({ ownerMode = false }) {
                 </a>
               </div>
             )}
-            <div className="overflow-hidden rounded-3xl bg-white shadow-card">
-              {cover && <img src={cover} alt={`${profile.shopName} cover`} className="h-40 w-full object-cover sm:h-56" />}
-          {/* hero, about, full info, delivery badges */}
-          <div className="grid gap-8 p-6 sm:p-10 lg:grid-cols-[360px_1fr]">
-            <div className="mx-auto w-64 sm:mx-0 sm:w-full">
+            <div className="divide-y divide-slate-100 overflow-hidden rounded-3xl bg-white shadow-card">
+              {/* gallery */}
+              {gallery.length > 0 && (
+                <div className="p-6 sm:p-10">
+                  <div className="mb-5 flex items-center justify-between">
+                    <h2 className="section-title">Gallery ({gallery.length})</h2>
+                    <button onClick={() => setModal('gallery')} className="text-sm font-semibold text-primary hover:underline">
+                      See all
+                    </button>
+                  </div>
+                  <RotatingRow
+                    items={gallery}
+                    target={4}
+                    stepMs={3000}
+                    aspect="aspect-[3/4]"
+                    render={(g, i) => (
+                      <img src={assetUrl(g, 640)} alt={`${profile.shopName} ${i + 1}`} className="h-full w-full rounded-xl object-cover" />
+                    )}
+                  />
+                </div>
+              )}
+
+          {/* profile picture, name, contact actions, about and full info */}
+          <div className="grid gap-8 p-6 sm:p-10 xl:grid-cols-[320px_1fr] xl:gap-10">
+            <div className="mx-auto w-64 sm:mx-0 sm:w-80">
               {banner ? (
                 <img src={banner} alt={profile.shopName} className="aspect-[3/4] w-full rounded-2xl object-cover shadow-card" />
               ) : (
-                <div className={`grid aspect-[3/4] w-full place-items-center rounded-2xl ${p.avatar}`}>
-                  <span className="text-6xl font-extrabold text-white">{initialsOf(profile.shopName)}</span>
+                <div className={`grid aspect-[3/4] w-full place-items-center rounded-2xl px-6 text-center ${p.avatar}`}>
+                  <span className="text-3xl font-extrabold leading-tight text-white sm:text-4xl">{profile.shopName}</span>
                 </div>
               )}
             </div>
@@ -120,39 +159,43 @@ export default function ProfilePage({ ownerMode = false }) {
               </h1>
               <p className="mt-2 text-sm text-slate-500">
                 <span className={`chip ${p.chip}`}>{profile.category === 'Other' ? profile.customCategory : profile.category}</span>
-                <span className="ml-2">{profile.address}</span>
+                <span className="ml-2">{formatAddress(profile)}</span>
               </p>
 
               <div className="mt-6 flex flex-wrap gap-3">
-                <a
-                  href={`tel:+91${profile.phone}`}
-                  className="inline-flex items-center gap-2.5 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-card transition hover:bg-primary/90"
-                >
-                  <PhoneIcon />
-                  Call now
-                </a>
-                <a
-                  href={wa}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2.5 rounded-xl border border-ggreen/30 bg-ggreen/5 px-5 py-3 text-sm font-bold text-ggreen transition hover:bg-ggreen/10"
-                >
-                  <WhatsAppIcon />
-                  WhatsApp
-                </a>
+                {tel && (
+                  <a
+                    href={tel}
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 sm:px-5 sm:py-3 text-sm font-bold text-white shadow-card transition hover:bg-primary/90"
+                  >
+                    <PhoneIcon />
+                    Call now
+                  </a>
+                )}
+                {wa && (
+                  <a
+                    href={wa}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl border border-ggreen/30 bg-ggreen/5 px-4 py-2.5 sm:px-5 sm:py-3 text-sm font-bold text-ggreen transition hover:bg-ggreen/10"
+                  >
+                    <WhatsAppIcon />
+                    WhatsApp
+                  </a>
+                )}
                 <a
                   href={`mailto:${profile.email}`}
-                  className="inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-primary hover:text-primary"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 sm:px-5 sm:py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-primary hover:text-primary"
                 >
                   <MailIcon />
                   Email
                 </a>
-                {profile.mapUrl && (
+                {maps && (
                   <a
-                    href={profile.mapUrl}
+                    href={maps}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-primary hover:text-primary"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 sm:px-5 sm:py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-primary hover:text-primary"
                   >
                     <DirectionsIcon />
                     Get directions
@@ -164,7 +207,7 @@ export default function ProfilePage({ ownerMode = false }) {
                     href={profile[s.key]}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-primary hover:text-primary"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 sm:px-5 sm:py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-primary hover:text-primary"
                   >
                     <s.Icon />
                     {s.label}
@@ -199,7 +242,7 @@ export default function ProfilePage({ ownerMode = false }) {
                   value={profile.operationOpen && profile.operationClose ? `${profile.operationOpen} to ${profile.operationClose}` : ''}
                 />
                 {profile.gst && <InfoCell label="GST" value={profile.gst} />}
-                <InfoCell label="Page URL" value={`call2now.in/b/${profile.pageSlug}`} />
+                <InfoCell label="Page URL" value={`${PUBLIC_HOST}/b/${profile.pageSlug}`} />
               </div>
 
               <div className="mt-7 flex flex-wrap gap-2 text-sm font-semibold">
@@ -211,34 +254,14 @@ export default function ProfilePage({ ownerMode = false }) {
 
           {/* products */}
           {products.length > 0 && (
-            <div className="border-t border-slate-100 p-6 sm:p-10">
+            <div className="p-6 sm:p-10">
               <div className="mb-5 flex items-center justify-between">
                 <h2 className="section-title">Products ({products.length})</h2>
                 <button onClick={() => setModal('products')} className="text-sm font-semibold text-primary hover:underline">
                   See all
                 </button>
               </div>
-              <RotatingRow items={products} target={2} aspect="" render={(pr) => <ProductTile pr={pr} />} />
-            </div>
-          )}
-
-          {/* gallery */}
-          {gallery.length > 0 && (
-            <div className="border-t border-slate-100 p-6 sm:p-10">
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="section-title">Gallery ({gallery.length})</h2>
-                <button onClick={() => setModal('gallery')} className="text-sm font-semibold text-primary hover:underline">
-                  See all
-                </button>
-              </div>
-              <RotatingRow
-                items={gallery}
-                target={4}
-                aspect="aspect-[3/4]"
-                render={(g, i) => (
-                  <img src={assetUrl(g)} alt={`${profile.shopName} ${i + 1}`} className="h-full w-full rounded-xl object-cover" />
-                )}
-              />
+              <RotatingRow items={products} target={4} aspect="" render={(pr) => <ProductTile pr={pr} />} />
             </div>
           )}
             </div>
@@ -260,7 +283,7 @@ export default function ProfilePage({ ownerMode = false }) {
         <SeeAllModal title={`All photos (${gallery.length})`} onClose={() => setModal(null)}>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {gallery.map((g, i) => (
-              <img key={i} src={assetUrl(g)} alt={`${profile.shopName} ${i + 1}`} className="aspect-[3/4] w-full rounded-xl object-cover" />
+              <img key={i} src={assetUrl(g, 480)} alt={`${profile.shopName} ${i + 1}`} loading="lazy" decoding="async" className="aspect-[3/4] w-full rounded-xl object-cover" />
             ))}
           </div>
         </SeeAllModal>
@@ -272,11 +295,11 @@ export default function ProfilePage({ ownerMode = false }) {
 }
 
 function ProductTile({ pr }) {
-  const img = assetUrl(pr.image);
+  const img = assetUrl(pr.image, 400);
   const off = pr.price && pr.discountedPrice ? Math.round(((pr.price - pr.discountedPrice) / pr.price) * 100) : 0;
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-slate-100 bg-white">
-      {img && <img src={img} alt={pr.name} className="aspect-[4/5] w-full object-cover" />}
+      {img && <img src={img} alt={pr.name} loading="lazy" decoding="async" className="aspect-[4/5] max-h-52 w-full object-cover" />}
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-bold text-slate-800">{pr.name}</h3>
@@ -341,7 +364,7 @@ const SOCIAL_BUTTONS = [
   { key: 'instagram', label: 'Instagram', Icon: InstagramIcon },
   { key: 'facebook', label: 'Facebook', Icon: FacebookIcon },
   { key: 'x', label: 'X', Icon: XIcon },
-  { key: 'linkedin', label: 'LinkedIn', Icon: LinkedInIcon },
+  { key: 'youtube', label: 'YouTube', Icon: YouTubeIcon },
   { key: 'telegram', label: 'Telegram', Icon: TelegramIcon },
   { key: 'website', label: 'Website', Icon: GlobeIcon },
 ];
@@ -373,10 +396,14 @@ function XIcon() {
   );
 }
 
-function LinkedInIcon() {
+function YouTubeIcon() {
   return (
     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M4.98 3.5a2.49 2.49 0 1 1-.02 4.98 2.49 2.49 0 0 1 .02-4.98zM3 9h4v12H3zM9 9h3.8v2.2h.05c.53-1 1.83-2.2 3.77-2.2 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.5c0-1.31-.02-3-1.83-3-1.83 0-2.11 1.43-2.11 2.9V21H9z" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M21.6 7.2a2.8 2.8 0 0 0-2-2C17.9 4.8 12 4.8 12 4.8s-5.9 0-7.6.4a2.8 2.8 0 0 0-2 2C2 8.9 2 12 2 12s0 3.1.4 4.8a2.8 2.8 0 0 0 2 2c1.7.4 7.6.4 7.6.4s5.9 0 7.6-.4a2.8 2.8 0 0 0 2-2C22 15.1 22 12 22 12s0-3.1-.4-4.8ZM10.2 15.3V8.7l5.7 3.3-5.7 3.3Z"
+      />
     </svg>
   );
 }

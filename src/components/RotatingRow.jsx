@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 const GAP = 16;
 const ANIM_MS = 600;
@@ -7,6 +7,8 @@ export default function RotatingRow({ items, target = 2, stepMs = 2500, render, 
   const [wide, setWide] = useState(() => window.innerWidth >= 640);
   const [index, setIndex] = useState(0);
   const [animate, setAnimate] = useState(true);
+  const [paused, setPaused] = useState(false);
+  const [unit, setUnit] = useState(0);
   const trackRef = useRef(null);
 
   useEffect(() => {
@@ -22,20 +24,33 @@ export default function RotatingRow({ items, target = 2, stepMs = 2500, render, 
   const items2 = useMemo(() => items.concat(items.slice(0, visible)), [items, visible]);
 
   useEffect(() => {
-    if (index >= items.length) setIndex(0);
+    if (index > items.length) setIndex(0);
   }, [items.length, index]);
 
+  // The slide width comes from the layout, so it has to be re-measured whenever the
+  // row is rebuilt or the column width changes. A stale width shifts the track by the
+  // wrong distance and the row stops lining up with its own edges.
+  useLayoutEffect(() => {
+    const first = trackRef.current?.children?.[0];
+    if (!first) return undefined;
+    const measure = () => setUnit(first.getBoundingClientRect().width);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(first);
+    return () => ro.disconnect();
+  }, [items2.length, cols, visible]);
+
   useEffect(() => {
-    if (!canRotate) return;
+    if (!canRotate || paused) return undefined;
     const t = setInterval(() => {
       setAnimate(true);
       setIndex((i) => i + 1);
     }, stepMs);
     return () => clearInterval(t);
-  }, [canRotate, stepMs]);
+  }, [canRotate, stepMs, paused]);
 
   useEffect(() => {
-    if (index !== items.length) return;
+    if (index !== items.length) return undefined;
     const t = setTimeout(() => {
       setAnimate(false);
       setIndex(0);
@@ -44,17 +59,25 @@ export default function RotatingRow({ items, target = 2, stepMs = 2500, render, 
     return () => clearTimeout(t);
   }, [index, items.length]);
 
-  const offset = useMemo(() => {
-    const track = trackRef.current;
-    if (!track || !track.children.length) return 0;
-    const w = track.children[0].getBoundingClientRect().width;
-    return index * (w + GAP);
-  }, [index, items2.length, visible]);
-
   if (!items.length) return null;
 
+  const offset = index * (unit + GAP);
+
+  // A clicked button keeps focus, which would leave the row paused for good.
+  const nudge = (delta) => (e) => {
+    setAnimate(true);
+    setIndex((i) => (i + delta + items.length) % items.length);
+    e.currentTarget.blur();
+  };
+
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
+    >
       <div className="overflow-hidden">
         <div
           ref={trackRef}
@@ -80,20 +103,14 @@ export default function RotatingRow({ items, target = 2, stepMs = 2500, render, 
       {canRotate && (
         <>
           <button
-            onClick={() => {
-              setAnimate(true);
-              setIndex((i) => (i - 1 + items.length) % items.length);
-            }}
+            onClick={nudge(-1)}
             className="absolute -left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white text-slate-700 shadow-card hover:text-primary"
             aria-label="Previous"
           >
             ‹
           </button>
           <button
-            onClick={() => {
-              setAnimate(true);
-              setIndex((i) => (i + 1) % items.length);
-            }}
+            onClick={nudge(1)}
             className="absolute -right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white text-slate-700 shadow-card hover:text-primary"
             aria-label="Next"
           >

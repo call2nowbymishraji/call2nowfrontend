@@ -1,5 +1,7 @@
 import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
+import Seo from '../seo/Seo.jsx';
+import { privacySeo } from '../seo/pages.js';
 
 function Section({ title, children }) {
   return (
@@ -13,6 +15,7 @@ function Section({ title, children }) {
 export default function PrivacyPolicy() {
   return (
     <div className="flex min-h-screen flex-col">
+      <Seo {...privacySeo()} />
       <Navbar />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
         <h1 className="text-3xl font-extrabold text-slate-900">Privacy Policy</h1>

@@ -6,6 +6,8 @@ import authService from '../services/authService.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { errMsg } from '../services/api.js';
+import Seo from '../seo/Seo.jsx';
+import { privateScreenSeo } from '../seo/pages.js';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -93,6 +95,7 @@ export default function Login() {
 
   return (
     <div className="grid min-h-screen place-items-center px-4 py-10">
+      <Seo {...privateScreenSeo('/login')} />
       <div className="card w-full max-w-md p-8">
         <div className="text-center">
           <Logo to="/" className="mx-auto h-12 w-auto" />
@@ -101,6 +104,7 @@ export default function Login() {
         </div>
         <form onSubmit={submit} className="mt-6 space-y-4">
           <input
+            aria-label="Email address"
             className="input"
             type="email"
             placeholder="Email Address"
@@ -110,6 +114,7 @@ export default function Login() {
           />
           <div className="relative">
             <input
+              aria-label="Password"
               className="input pr-12"
               type={showPass ? 'text' : 'password'}
               placeholder="Password"
@@ -164,6 +169,7 @@ export default function Login() {
               <form onSubmit={forgotEmail} className="mt-4">
                 <p className="mb-3 text-sm text-slate-500">Enter your registered email to receive an OTP.</p>
                 <input
+                  aria-label="Email address for password reset"
                   className="input"
                   type="email"
                   autoFocus
@@ -182,6 +188,7 @@ export default function Login() {
               <form onSubmit={forgotOtp} className="mt-4">
                 <p className="mb-3 text-sm text-slate-500">Enter the 6-digit code sent to {forgot.email}.</p>
                 <input
+                  aria-label="Six digit verification code"
                   className="input text-center text-2xl font-bold tracking-[0.5em]"
                   maxLength={6}
                   inputMode="numeric"
@@ -205,6 +212,7 @@ export default function Login() {
               <form onSubmit={forgotReset} className="mt-4 space-y-3">
                 <p className="text-sm text-slate-500">Set your new password.</p>
                 <input
+                  aria-label="New password"
                   className="input"
                   type="password"
                   placeholder="New password"
@@ -212,6 +220,7 @@ export default function Login() {
                   onChange={(e) => setForgotForm((f) => ({ ...f, password: e.target.value }))}
                 />
                 <input
+                  aria-label="Confirm new password"
                   className="input"
                   type="password"
                   placeholder="Confirm new password"

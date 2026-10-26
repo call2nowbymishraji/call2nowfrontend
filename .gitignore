@@ -6,4 +6,5 @@ dist/
 *.log
 *.zip
 .DS_Store
+.netlify/
 system-commandline-sentinel-files/

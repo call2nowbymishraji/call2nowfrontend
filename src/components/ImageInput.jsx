@@ -37,6 +37,7 @@ export default function ImageInput({
         <input
           ref={ref}
           type="file"
+          aria-label={label}
           accept="image/*"
           className="hidden"
           onChange={(e) => {

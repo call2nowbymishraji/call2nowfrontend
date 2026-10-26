@@ -37,6 +37,7 @@ export default function OtpModal({ open, title, subtitle, email, devCode, onVeri
         </div>
         <form onSubmit={submit}>
           <input
+            aria-label="Six digit verification code"
             autoFocus
             inputMode="numeric"
             maxLength={6}

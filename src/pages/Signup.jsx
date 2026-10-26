@@ -7,6 +7,8 @@ import authService from '../services/authService.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { errMsg } from '../services/api.js';
+import Seo from '../seo/Seo.jsx';
+import { privateScreenSeo } from '../seo/pages.js';
 
 export default function Signup() {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -63,6 +65,7 @@ export default function Signup() {
 
   return (
     <div className="grid min-h-screen place-items-center px-4 py-10">
+      <Seo {...privateScreenSeo('/signup')} />
       <div className="card w-full max-w-md p-8">
         <div className="text-center">
           <Logo to="/" className="mx-auto h-12 w-auto" />
@@ -71,15 +74,16 @@ export default function Signup() {
         </div>
         <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
           <div>
-            <input className="input" placeholder="Name" value={form.name} onChange={set('name')} />
+            <input aria-label="Your name" className="input" placeholder="Name" value={form.name} onChange={set('name')} />
             {errors.name && <p className="err">{errors.name}</p>}
           </div>
           <div>
-            <input className="input" type="email" placeholder="Email Address" value={form.email} onChange={set('email')} />
+            <input aria-label="Email address" className="input" type="email" placeholder="Email Address" value={form.email} onChange={set('email')} />
             {errors.email && <p className="err">{errors.email}</p>}
           </div>
           <div className="relative">
             <input
+              aria-label="Password"
               className="input pr-12"
               type={showPass ? 'text' : 'password'}
               placeholder="Password"

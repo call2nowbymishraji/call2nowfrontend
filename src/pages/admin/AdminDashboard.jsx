@@ -4,6 +4,10 @@ import ImageInput from '../../components/ImageInput.jsx';
 import adminService from '../../services/adminService.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { assetUrl, errMsg } from '../../services/api.js';
+import Seo from '../../seo/Seo.jsx';
+import { privateScreenSeo } from '../../seo/pages.js';
+
+const ADMIN_SEO = privateScreenSeo('/admin');
 
 const TENURES = [
   [0, 'No free promotion'],
@@ -22,6 +26,7 @@ export default function AdminDashboard() {
   const [catName, setCatName] = useState('');
   const [editingCat, setEditingCat] = useState(null);
   const [featuredLive, setFeaturedLive] = useState(false);
+  const [homeFiltersLive, setHomeFiltersLive] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
@@ -33,7 +38,10 @@ export default function AdminDashboard() {
     adminService.listProfiles().then((d) => setProfiles(d.profiles || [])).catch(() => {});
     adminService.listSlides().then((d) => setSlides(d.slides || [])).catch(() => {});
     adminService.listAds().then((d) => setAds(d.ads || [])).catch(() => {});
-    adminService.getSettings().then((d) => setFeaturedLive(!!d.settings?.featuredLive)).catch(() => {});
+    adminService.getSettings().then((d) => {
+      setFeaturedLive(!!d.settings?.featuredLive);
+      setHomeFiltersLive(!!d.settings?.homeFiltersLive);
+    }).catch(() => {});
     adminService.listCategories().then((d) => setCategories(d.categories || [])).catch(() => {});
   }, []);
 
@@ -102,6 +110,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen">
+      <Seo {...ADMIN_SEO} />
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 py-10">
         <h1 className="text-2xl font-extrabold text-slate-900">Admin dashboard</h1>
@@ -127,7 +136,8 @@ export default function AdminDashboard() {
         </div>
 
         {tab === 'profiles' && (
-          <div className="card mt-6 divide-y divide-slate-100">
+          <div className="mt-6 space-y-6">
+            <div className="card divide-y divide-slate-100">
             {profiles.length === 0 && <p className="p-8 text-center text-sm text-slate-400">No profiles yet.</p>}
             {profiles.map((p) => (
               <div key={p._id} className="p-5">
@@ -146,6 +156,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <select
+                      aria-label="Promotion tenure"
                       className="input !w-auto !py-2 text-sm"
                       value={p.promo?.days || 0}
                       disabled={busy}
@@ -229,6 +240,7 @@ export default function AdminDashboard() {
                 )}
               </div>
             ))}
+            </div>
           </div>
         )}
 
@@ -241,7 +253,7 @@ export default function AdminDashboard() {
               </div>
               <button
                 disabled={busy}
-                onClick={() => run(() => adminService.setSettings(!featuredLive), featuredLive ? 'Featured section hidden' : 'Featured section is live')}
+                onClick={() => run(() => adminService.setSettings({ featuredLive: !featuredLive }), featuredLive ? 'Featured section hidden' : 'Featured section is live')}
                 className={`rounded-full px-5 py-2.5 text-sm font-semibold transition disabled:opacity-50 ${
                   featuredLive ? 'bg-ggreen text-white shadow-pill' : 'bg-slate-200 text-slate-600 shadow-pill hover:bg-slate-300'
                 }`}
@@ -249,12 +261,35 @@ export default function AdminDashboard() {
                 {featuredLive ? '● Live on home page' : '○ Hidden from home page'}
               </button>
             </div>
+            <div className="card flex flex-wrap items-center justify-between gap-4 p-5">
+              <div>
+                <h2 className="font-bold text-slate-800">Home page search filters</h2>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Show the category, location and Search button row under the home page search box. Hidden by default,
+                  and the search box keeps working with the Enter key either way.
+                </p>
+              </div>
+              <button
+                disabled={busy}
+                onClick={() =>
+                  run(
+                    () => adminService.setSettings({ homeFiltersLive: !homeFiltersLive }),
+                    homeFiltersLive ? 'Search filters hidden on home page' : 'Search filters are live on home page'
+                  )
+                }
+                className={`rounded-full px-5 py-2.5 text-sm font-semibold transition disabled:opacity-50 ${
+                  homeFiltersLive ? 'bg-ggreen text-white shadow-pill' : 'bg-slate-200 text-slate-600 shadow-pill hover:bg-slate-300'
+                }`}
+              >
+                {homeFiltersLive ? '● Live on home page' : '○ Hidden on home page'}
+              </button>
+            </div>
             <div className="grid gap-6 lg:grid-cols-3">
             <form onSubmit={createSlide} className="card space-y-3 p-6">
               <h2 className="section-title">Add promotion slide</h2>
-              <input className="input" placeholder="Title *" value={slideForm.title} onChange={(e) => setSlideForm((s) => ({ ...s, title: e.target.value }))} />
-              <input className="input" placeholder="Subtitle" value={slideForm.subtitle} onChange={(e) => setSlideForm((s) => ({ ...s, subtitle: e.target.value }))} />
-              <select className="input" value={slideForm.profileId} onChange={(e) => setSlideForm((s) => ({ ...s, profileId: e.target.value }))}>
+              <input aria-label="Slide title" className="input" placeholder="Title *" value={slideForm.title} onChange={(e) => setSlideForm((s) => ({ ...s, title: e.target.value }))} />
+              <input aria-label="Slide subtitle" className="input" placeholder="Subtitle" value={slideForm.subtitle} onChange={(e) => setSlideForm((s) => ({ ...s, subtitle: e.target.value }))} />
+              <select aria-label="Linked profile" className="input" value={slideForm.profileId} onChange={(e) => setSlideForm((s) => ({ ...s, profileId: e.target.value }))}>
                 <option value="">No linked profile</option>
                 {profiles.map((p) => (
                   <option key={p._id} value={p._id}>
@@ -308,11 +343,11 @@ export default function AdminDashboard() {
           <div className="mt-6 grid gap-6 lg:grid-cols-3">
             <form onSubmit={createAd} className="card space-y-3 p-6">
               <h2 className="section-title">Add advertisement</h2>
-              <input className="input" placeholder="Title *" value={adForm.title} onChange={(e) => setAdForm((s) => ({ ...s, title: e.target.value }))} />
-              <input className="input" placeholder="Subtitle / offer text" value={adForm.subtitle} onChange={(e) => setAdForm((s) => ({ ...s, subtitle: e.target.value }))} />
-              <input className="input" placeholder="Button text (e.g. Shop now)" value={adForm.ctaText} onChange={(e) => setAdForm((s) => ({ ...s, ctaText: e.target.value }))} />
-              <input className="input" placeholder="Link URL (https://...)" value={adForm.linkUrl} onChange={(e) => setAdForm((s) => ({ ...s, linkUrl: e.target.value }))} />
-              <select className="input" value={adForm.placement} onChange={(e) => setAdForm((s) => ({ ...s, placement: e.target.value }))}>
+              <input aria-label="Advertisement title" className="input" placeholder="Title *" value={adForm.title} onChange={(e) => setAdForm((s) => ({ ...s, title: e.target.value }))} />
+              <input aria-label="Advertisement subtitle" className="input" placeholder="Subtitle / offer text" value={adForm.subtitle} onChange={(e) => setAdForm((s) => ({ ...s, subtitle: e.target.value }))} />
+              <input aria-label="Advertisement button text" className="input" placeholder="Button text (e.g. Shop now)" value={adForm.ctaText} onChange={(e) => setAdForm((s) => ({ ...s, ctaText: e.target.value }))} />
+              <input aria-label="Advertisement link URL" className="input" placeholder="Link URL (https://...)" value={adForm.linkUrl} onChange={(e) => setAdForm((s) => ({ ...s, linkUrl: e.target.value }))} />
+              <select aria-label="Advertisement placement" className="input" value={adForm.placement} onChange={(e) => setAdForm((s) => ({ ...s, placement: e.target.value }))}>
                 <option value="popup">Home page popup</option>
                 <option value="left">Left side</option>
                 <option value="right">Right side</option>
@@ -370,6 +405,7 @@ export default function AdminDashboard() {
           <div className="mt-6 space-y-6">
             <form onSubmit={addCategory} className="card flex flex-wrap items-center gap-3 p-5">
               <input
+                aria-label="New category name"
                 className="input flex-1"
                 placeholder="New category name (e.g. Toys & Gifts)"
                 value={catName}
@@ -386,6 +422,7 @@ export default function AdminDashboard() {
                   {editingCat?.id === c._id ? (
                     <>
                       <input
+                        aria-label="Category name"
                         className="input flex-1"
                         value={editingCat.name}
                         onChange={(e) => setEditingCat({ id: c._id, name: e.target.value })}

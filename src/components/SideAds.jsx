@@ -15,7 +15,7 @@ export default function SideAdRail({ side }) {
 
   if (!ad) return null;
 
-  const img = assetUrl(ad.image);
+  const img = assetUrl(ad.image, 480);
   const inner = (
     <>
       {img && <img src={img} alt={ad.title} className="w-full flex-1 object-cover" />}

@@ -7,7 +7,7 @@ export default function HelpWidget() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-16 right-4 z-[70] flex flex-col items-end gap-3 sm:right-6">
+    <div className="help-widget fixed bottom-16 right-4 z-[70] flex flex-col items-end gap-3 sm:right-6">
       {open && (
         <div className="flex w-44 flex-col gap-2 rounded-2xl border border-slate-100 bg-white p-3 shadow-card">
           <a

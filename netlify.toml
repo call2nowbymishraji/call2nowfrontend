@@ -7,8 +7,95 @@
   VITE_API_URL = "https://call2nowbackendend.onrender.com/api"
   VITE_API_ORIGIN = "https://call2nowbackendend.onrender.com"
   VITE_GOOGLE_CLIENT_ID = "83347382426-50sgg74v3t0c68e5pu1jj2470anpkp9u.apps.googleusercontent.com"
+  # Canonical production origin. Used for every canonical URL, og:url and sitemap <loc>,
+  # and read by the prerender step that generates the initial HTML.
+  VITE_SITE_URL = "https://call2now.com"
+  SITE_URL = "https://call2now.com"
+  SEO_API_ORIGIN = "https://call2nowbackendend.onrender.com"
+  # How many business pages get a generated initial HTML file. The rest still work, they
+  # just render on the client. Set 0 to skip profile prerendering entirely.
+  PRERENDER_PROFILES = "300"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  # The timeout is not configurable here (the config parser rejects it). Netlify's default
+  # of 10 seconds is kept, so the sitemap function times its own API call at 8 seconds and
+  # answers with a valid static-only file if the backend is still cold.
+
+[[edge_functions]]
+  function = "profile-status"
+  path = "/b/*"
+
+# Generated from the live profile list, so new pages become eligible without a redeploy.
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/.netlify/functions/sitemap"
+  status = 200
+
+# A business page only exists if it was generated. Serving /index.html here would give every
+# mistyped or removed slug a 200 with the homepage title and canonical (a soft 404 Google
+# ignores badly), so anything under /b/ that is not a real file gets the genuine 404 document.
+# This holds even before the backend's /api/seo routes are deployed; the edge function adds
+# the case a static rule cannot see: a stale generated file for a profile that was removed.
+[[redirects]]
+  from = "/b/*"
+  to = "/404.html"
+  status = 404
+  force = false
 
 [[redirects]]
-  from = "/*"
+  from = "/login"
   to = "/index.html"
   status = 200
+  force = false
+
+[[redirects]]
+  from = "/signup"
+  to = "/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/search"
+  to = "/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/create-profile"
+  to = "/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/profile"
+  to = "/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/admin"
+  to = "/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/privacy"
+  to = "/index.html"
+  status = 200
+  force = false
+
+[[redirects]]
+  from = "/terms"
+  to = "/index.html"
+  status = 200
+  force = false
+
+# Anything that is not a file and not one of the routes above answers with a real 404
+# status and the noindex 404 page. Query strings are preserved by Netlify.
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+  force = false

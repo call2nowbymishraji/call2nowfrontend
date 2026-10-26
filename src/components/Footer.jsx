@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import WhatsAppIcon from './WhatsAppIcon.jsx';
+import { DAY_PRICE, FREE_DAYS, QR_SRC, UPI_ID, YEAR_PRICE, paymentWaLink } from '../utils/payment.js';
 
 export default function Footer() {
   const { user } = useAuth();
   return (
     <footer className="mt-16 bg-slate-900 text-slate-300">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <img src="/logo.png" alt="call2now" className="block h-8 w-auto brightness-110" />
           <p className="mt-4 max-w-xs text-left text-sm leading-6 text-slate-400">
@@ -53,6 +55,29 @@ export default function Footer() {
             <li>helpcall2now@gmail.com</li>
             <li>+91 9305035828</li>
           </ul>
+        </div>
+        <div>
+          <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">Verify and complete the payment</h4>
+          <div className="flex items-start gap-4">
+            <a href={QR_SRC} target="_blank" rel="noreferrer" title="Open the full size QR" className="shrink-0">
+              <img src={QR_SRC} alt="Call2Now UPI payment QR code" className="h-28 w-28 rounded-lg bg-white p-1.5" />
+            </a>
+            <p className="text-xs leading-5 text-slate-400">
+              Scan this QR in any UPI app. Free for {FREE_DAYS} days, then ₹{DAY_PRICE} per day (₹{YEAR_PRICE} a year).
+            </p>
+          </div>
+          <p className="mt-3 text-xs text-slate-400">
+            UPI ID <span className="font-semibold text-slate-200">{UPI_ID}</span>
+          </p>
+          <a
+            href={paymentWaLink()}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex items-center gap-2 rounded-full bg-ggreen px-4 py-2 text-xs font-bold text-white transition hover:brightness-110"
+          >
+            <WhatsAppIcon className="h-3.5 w-3.5" />
+            Send payment proof
+          </a>
         </div>
         <div>
           <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">Our Offices</h4>

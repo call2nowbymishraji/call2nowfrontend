@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import ProfileCard from './ProfileCard.jsx';
 
 const GAP = 20;
@@ -6,8 +6,7 @@ const STEP_MS = 2500;
 const ANIM_MS = 600;
 
 function visibleFor(w) {
-  if (w >= 1024) return 4;
-  if (w >= 640) return 2;
+  if (w >= 768) return 2;
   return 1;
 }
 
@@ -15,6 +14,7 @@ export default function SuggestedCarousel({ profiles }) {
   const [visible, setVisible] = useState(() => visibleFor(window.innerWidth));
   const [index, setIndex] = useState(0);
   const [animate, setAnimate] = useState(true);
+  const [unit, setUnit] = useState(0);
   const trackRef = useRef(null);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function SuggestedCarousel({ profiles }) {
   const items = useMemo(() => profiles.concat(profiles.slice(0, visible)), [profiles, visible]);
 
   useEffect(() => {
-    if (index >= profiles.length) setIndex(0);
+    if (index > profiles.length) setIndex(0);
   }, [profiles.length, index]);
 
   useEffect(() => {
@@ -49,14 +49,21 @@ export default function SuggestedCarousel({ profiles }) {
     return () => clearTimeout(t);
   }, [index, profiles.length]);
 
-  const offset = useMemo(() => {
-    const track = trackRef.current;
-    if (!track || !track.children.length) return 0;
-    const cardW = track.children[0].getBoundingClientRect().width;
-    return index * (cardW + GAP);
-  }, [index, items.length, visible]);
+  // The slide width comes from a live measurement, so a viewport or container
+  // change re-aligns the track instead of leaving it on a stale offset.
+  useLayoutEffect(() => {
+    const first = trackRef.current?.children?.[0];
+    if (!first) return undefined;
+    const measure = () => setUnit(first.getBoundingClientRect().width);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(first);
+    return () => ro.disconnect();
+  }, [items.length, visible]);
 
   if (!profiles.length) return null;
+
+  const offset = index * (unit + GAP);
 
   const canMove = profiles.length > 1;
 

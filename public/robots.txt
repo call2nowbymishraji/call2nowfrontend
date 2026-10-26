@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+# Private or authenticated screens. Search results are deliberately NOT disallowed: they
+# carry "noindex, follow" so Google can read the directive and still follow the business
+# links on the page.
+Disallow: /admin
+Disallow: /create-profile
+Disallow: /login
+Disallow: /profile
+Disallow: /signup
+
+Sitemap: https://call2now.com/sitemap.xml

@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
+import Seo from '../seo/Seo.jsx';
+import { notFoundSeo } from '../seo/pages.js';
 
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col">
+      <Seo {...notFoundSeo()} />
       <Navbar />
       <main className="flex flex-1 items-center justify-center px-4 py-16">
         <div className="card w-full max-w-md p-10 text-center">

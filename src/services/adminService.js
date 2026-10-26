@@ -16,7 +16,7 @@ export default {
   toggleSlide: (id, active) => api.put(`/admin/slides/${id}`, { active }).then((r) => r.data),
   deleteSlide: (id) => api.delete(`/admin/slides/${id}`).then((r) => r.data),
   getSettings: () => api.get('/admin/settings').then((r) => r.data),
-  setSettings: (featuredLive) => api.put('/admin/settings', { featuredLive }).then((r) => r.data),
+  setSettings: (patch) => api.put('/admin/settings', patch).then((r) => r.data),
   listAds: () => api.get('/admin/ads').then((r) => r.data),
   createAd: (formData) =>
     api

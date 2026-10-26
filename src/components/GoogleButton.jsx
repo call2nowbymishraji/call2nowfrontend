@@ -58,8 +58,9 @@ export default function GoogleButton({ onCredential }) {
             <p className="mt-1 text-xs text-slate-500">
               No VITE_GOOGLE_CLIENT_ID configured, so simulate the Google account that would be returned.
             </p>
-            <input className="input mt-4" placeholder="Google name" value={name} onChange={(e) => setName(e.target.value)} />
+            <input aria-label="Google name" className="input mt-4" placeholder="Google name" value={name} onChange={(e) => setName(e.target.value)} />
             <input
+              aria-label="Google email"
               className="input mt-2"
               type="email"
               placeholder="Google email"

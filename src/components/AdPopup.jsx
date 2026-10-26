@@ -18,9 +18,15 @@ export default function AdPopup() {
     searchService.ads('popup').then((d) => setAd(pickRandom(d.ads))).catch(() => setAd(null));
   }, []);
 
+  // The sheet is anchored to the same bottom corner the help widget floats in.
+  useEffect(() => {
+    document.body.classList.toggle('ad-open', !!ad);
+    return () => document.body.classList.remove('ad-open');
+  }, [ad]);
+
   if (!ad) return null;
 
-  const img = assetUrl(ad.image);
+  const img = assetUrl(ad.image, 512);
   const body = (
     <>
       {img && <img src={img} alt={ad.title} className="h-28 w-44 shrink-0 rounded-xl object-cover sm:h-40 sm:w-64" />}

@@ -58,7 +58,7 @@ export default function PromoSlider() {
                 </div>
               );
             }
-            const img = assetUrl(s.image);
+            const img = assetUrl(s.image, 900);
             const to = s.profile ? `/b/${s.profile.pageSlug}` : s.customUrl || '#';
             const inner = (
               <>
