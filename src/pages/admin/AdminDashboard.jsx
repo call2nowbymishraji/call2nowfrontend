@@ -2,12 +2,19 @@ import { useCallback, useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar.jsx';
 import ImageInput from '../../components/ImageInput.jsx';
 import adminService from '../../services/adminService.js';
+import PhoneIcon from '../../components/PhoneIcon.jsx';
+import WhatsAppIcon from '../../components/WhatsAppIcon.jsx';
+import { callLink, waLink } from '../../utils/contact.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { assetUrl, errMsg } from '../../services/api.js';
 import Seo from '../../seo/Seo.jsx';
 import { privateScreenSeo } from '../../seo/pages.js';
 
 const ADMIN_SEO = privateScreenSeo('/admin');
+
+// Neutral on purpose: the green/blue/red pills on the right are record states, these open a call or a chat.
+const CONTACT_BTN =
+  'inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-pill transition hover:border-primary hover:text-primary';
 
 const TENURES = [
   [0, 'No free promotion'],
@@ -116,7 +123,7 @@ export default function AdminDashboard() {
         <h1 className="text-2xl font-extrabold text-slate-900">Admin dashboard</h1>
         <p className="mt-1 text-sm text-slate-500">Manage promotions, profiles and products.</p>
 
-        <div className="mt-6 flex gap-2">
+        <div className="mt-6 flex flex-wrap gap-2">
           {[
             ['profiles', 'Profiles & products'],
             ['slides', 'Front-page slider'],
@@ -139,7 +146,10 @@ export default function AdminDashboard() {
           <div className="mt-6 space-y-6">
             <div className="card divide-y divide-slate-100">
             {profiles.length === 0 && <p className="p-8 text-center text-sm text-slate-400">No profiles yet.</p>}
-            {profiles.map((p) => (
+            {profiles.map((p) => {
+              const tel = callLink(p);
+              const wa = waLink(p);
+              return (
               <div key={p._id} className="p-5">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
@@ -153,6 +163,30 @@ export default function AdminDashboard() {
                         ? ` (since ${new Date(p.promo.startDate).toLocaleDateString()})`
                         : ''}
                     </p>
+                    {/* Reaching the owner is the admin's first job, so the two links sit with
+                        the owner's details instead of the record actions on the right. */}
+                    {(tel || wa) && (
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {tel && (
+                          <a href={tel} className={CONTACT_BTN} title={`Call ${p.phone}`}>
+                            <PhoneIcon className="h-4 w-4 text-primary" />
+                            Call
+                          </a>
+                        )}
+                        {wa && (
+                          <a
+                            href={wa}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={CONTACT_BTN}
+                            title={`Message ${p.shopName} on WhatsApp`}
+                          >
+                            <WhatsAppIcon className="h-4 w-4 text-ggreen" />
+                            WhatsApp
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <select
@@ -239,7 +273,8 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
             </div>
           </div>
         )}

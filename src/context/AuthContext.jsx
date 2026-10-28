@@ -35,8 +35,8 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => applySession(await authService.login(email, password));
+  const phoneLogin = async (payload) => applySession(await authService.loginPhone(payload));
   const googleLogin = async (payload) => applySession(await authService.google(payload));
-  const completeSignup = (data) => applySession(data);
   const markProfileCreated = (slug) => {
     setHasProfile(true);
     setProfileSlug(slug);
@@ -50,7 +50,18 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, hasProfile, profileSlug, loading, login, googleLogin, completeSignup, markProfileCreated, logout }}
+      value={{
+        user,
+        hasProfile,
+        profileSlug,
+        loading,
+        login,
+        phoneLogin,
+        googleLogin,
+        startSession: applySession,
+        markProfileCreated,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
