@@ -17,7 +17,7 @@ import { assetUrl, errMsg } from '../services/api.js';
 import { DAY_PRICE, FREE_DAYS, PAYEE_NAME, QR_SRC, UPI_ID, YEAR_PRICE, paymentWaLink } from '../utils/payment.js';
 import Seo from '../seo/Seo.jsx';
 import { privateScreenSeo } from '../seo/pages.js';
-import { SITE_URL } from '../seo/site.js';
+import { SITE_URL, profilePath } from '../seo/site.js';
 
 const PUBLIC_HOST = SITE_URL.replace(/^https?:\/\//, '');
 const CREATE_SEO = privateScreenSeo('/create-profile');
@@ -360,7 +360,7 @@ export default function CreateProfile() {
       const res = editMode ? await profileService.update(profileId, fd) : await profileService.create(fd);
       markProfileCreated(res.profile.pageSlug);
       toast(editMode ? 'Profile updated' : 'Business profile created!');
-      navigate(`/b/${res.profile.pageSlug}`);
+      navigate(profilePath(res.profile.pageSlug));
     } catch (e) {
       toast(errMsg(e), 'error');
     } finally {
@@ -490,7 +490,7 @@ export default function CreateProfile() {
                 {errors.shopName && <p className="err">{errors.shopName}</p>}
                 {slug && (
                   <p className="mt-1 break-all text-xs text-slate-400">
-                    Your page URL: <span className="font-semibold text-primary">{PUBLIC_HOST}/b/{slug}</span>
+                    Your page URL: <span className="font-semibold text-primary">{PUBLIC_HOST}{profilePath(slug)}</span>
                   </p>
                 )}
               </div>

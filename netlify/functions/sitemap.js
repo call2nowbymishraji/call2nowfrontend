@@ -9,10 +9,39 @@ const API_ORIGIN = String(
 const URL_LIMIT = 50000;
 const VALID_SLUG = /^[a-z0-9][a-z0-9-]*$/i;
 
-// Each generated page is a directory index, so Netlify answers /b/slug with a 301 to
-// /b/slug/. The sitemap declares the form that returns 200, which is also the form every
-// canonical tag on the page carries.
+// Each generated page is a directory index, so /slug answers with a 301 to /slug/. The
+// sitemap declares the form that returns 200, which is also the form every canonical tag on
+// the page carries. Asset urls keep their extension.
 const pageUrl = (path) => (path.endsWith('/') ? `${SITE_URL}${path}` : `${SITE_URL}${path}/`);
+
+// Business pages live at the root, so a slug that spells an app route or a built file is not a
+// business URL and must never be listed. The server refuses these names when it mints a slug;
+// this covers rows created before that guard existed. Keep in step with RESERVED_SEGMENTS in
+// src/seo/site.js. This file is deployed standalone, so the list cannot be imported.
+const RESERVED = new Set([
+  'login',
+  'signup',
+  'search',
+  'create-profile',
+  'profile',
+  'admin',
+  'privacy',
+  'terms',
+  'b',
+  'index.html',
+  '404.html',
+  'favicon.png',
+  'logo.png',
+  'og-cover.png',
+  'robots.txt',
+  'upi-qr.png',
+  'sitemap.xml',
+  'sitemap-index.xml',
+  'assets',
+  '_redirects',
+  '.netlify',
+  '.well-known',
+]);
 
 // Effective dates of the two legal pages, matching the copy shown on them.
 const STATIC_URLS = [
@@ -85,8 +114,8 @@ export default async (request, context) => {
     }
     profiles.forEach((profile) => {
       const slug = String(profile.slug || '').trim();
-      if (!VALID_SLUG.test(slug)) return;
-      add(pageUrl(`/b/${encodeURIComponent(slug)}`), isoDate(profile.lastmod));
+      if (!VALID_SLUG.test(slug) || RESERVED.has(slug.toLowerCase())) return;
+      add(pageUrl(`/${encodeURIComponent(slug)}`), isoDate(profile.lastmod));
     });
     if (truncated) notes.push(`Listed ${entries.length} URLs; the profile list reached its limit, so some business pages may be missing.`);
   } catch (error) {

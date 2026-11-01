@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
 import RotatingRow from '../components/RotatingRow.jsx';
 import SideAdRail from '../components/SideAds.jsx';
+import LoadingOverlay from '../components/LoadingOverlay.jsx';
 import profileService from '../services/profileService.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { paletteFor } from '../utils/categories.js';
@@ -12,15 +13,15 @@ import { callLink, waLink, mapsLink } from '../utils/contact.js';
 import { assetUrl, errMsg } from '../services/api.js';
 import Seo from '../seo/Seo.jsx';
 import { missingProfileSeo, privateScreenSeo, profilePendingSeo, profileSeo } from '../seo/pages.js';
-import { ROBOTS, absoluteUrl } from '../seo/site.js';
+import { ROBOTS, absoluteUrl, profilePath } from '../seo/site.js';
 
 const OWNER_PRIVATE = privateScreenSeo('/profile');
 
 // The owner view shows the same business plus private context, so it is never indexed and
-// it points Google at the public /b/:slug URL as the single canonical version.
+// it points Google at the public /:slug URL as the single canonical version.
 function ownerSeo(profile) {
   if (!profile) return OWNER_PRIVATE;
-  return { ...profileSeo(profile), robots: ROBOTS.hidden, canonical: absoluteUrl(`/b/${profile.pageSlug}`), jsonLd: [] };
+  return { ...profileSeo(profile), robots: ROBOTS.hidden, canonical: absoluteUrl(profilePath(profile.pageSlug)), jsonLd: [] };
 }
 
 export default function ProfilePage({ ownerMode = false }) {
@@ -42,9 +43,14 @@ export default function ProfilePage({ ownerMode = false }) {
 
   if (loading)
     return (
-      <div className="grid min-h-screen place-items-center">
+      <div className="flex min-h-screen flex-col">
         <Seo {...(ownerMode ? ownerSeo(null) : profilePendingSeo(slug))} />
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-primary" />
+        <Navbar />
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-6">
+          <div className="card h-[70vh] animate-pulse bg-slate-100" />
+        </main>
+        <Footer />
+        <LoadingOverlay />
       </div>
     );
 
@@ -245,7 +251,7 @@ export default function ProfilePage({ ownerMode = false }) {
                   value={profile.operationOpen && profile.operationClose ? `${profile.operationOpen} to ${profile.operationClose}` : ''}
                 />
                 {profile.gst && <InfoCell label="GST" value={profile.gst} />}
-                <PageUrlCell url={absoluteUrl(`/b/${profile.pageSlug}`)} shopName={profile.shopName} />
+                <PageUrlCell url={absoluteUrl(profilePath(profile.pageSlug))} shopName={profile.shopName} />
               </div>
 
               {/* Below xl the photo stacks above the details, so the pills stay at the end. */}

@@ -14,14 +14,18 @@ const ADMIN_SEO = privateScreenSeo('/admin');
 
 // Neutral on purpose: the green/blue/red pills on the right are record states, these open a call or a chat.
 const CONTACT_BTN =
-  'inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-pill transition hover:border-primary hover:text-primary';
+  'inline-flex h-9 w-fit shrink-0 items-center justify-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-pill transition hover:border-primary hover:text-primary';
+// Fixed widths: the list only reads as a table when every row's controls occupy the same columns.
+const ACT = 'inline-flex h-9 shrink-0 items-center justify-center rounded-full px-3 text-xs font-semibold shadow-pill transition disabled:opacity-50';
 
+// Shorter than the option text a picker would show elsewhere: every control in the profile row
+// has one fixed width so the rows read as columns of the same table.
 const TENURES = [
-  [0, 'No free promotion'],
+  [0, 'No promotion'],
   [30, '30 days free'],
   [60, '60 days free'],
-  [365, '1 year paid subscription'],
-  [36500, 'Lifetime paid subscription'],
+  [365, '1 year paid'],
+  [36500, 'Lifetime paid'],
 ];
 
 export default function AdminDashboard() {
@@ -119,7 +123,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen">
       <Seo {...ADMIN_SEO} />
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 py-10">
+      <main className="mx-auto max-w-7xl px-4 py-10">
         <h1 className="text-2xl font-extrabold text-slate-900">Admin dashboard</h1>
         <p className="mt-1 text-sm text-slate-500">Manage promotions, profiles and products.</p>
 
@@ -150,109 +154,101 @@ export default function AdminDashboard() {
               const tel = callLink(p);
               const wa = waLink(p);
               return (
-              <div key={p._id} className="p-5">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h3 className="font-bold text-slate-800">{p.shopName}</h3>
-                    <p className="text-xs text-slate-500">
-                      {p.category === 'Other' ? p.customCategory : p.category} · {p.email} · {p.products?.length || 0} products
-                    </p>
-                    <p className="mt-1 text-xs font-semibold text-gyellow">
-                      Promotion: {p.promo?.days || 0} days free
-                      {p.promo?.days > 0 && p.promo?.startDate
-                        ? ` (since ${new Date(p.promo.startDate).toLocaleDateString()})`
-                        : ''}
-                    </p>
-                    {/* Reaching the owner is the admin's first job, so the two links sit with
-                        the owner's details instead of the record actions on the right. */}
-                    {(tel || wa) && (
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
-                        {tel && (
-                          <a href={tel} className={CONTACT_BTN} title={`Call ${p.phone}`}>
-                            <PhoneIcon className="h-4 w-4 text-primary" />
-                            Call
-                          </a>
-                        )}
-                        {wa && (
-                          <a
-                            href={wa}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={CONTACT_BTN}
-                            title={`Message ${p.shopName} on WhatsApp`}
-                          >
-                            <WhatsAppIcon className="h-4 w-4 text-ggreen" />
-                            WhatsApp
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <select
-                      aria-label="Promotion tenure"
-                      className="input !w-auto !py-2 text-sm"
-                      value={p.promo?.days || 0}
-                      disabled={busy}
-                      onChange={(e) => run(() => adminService.setTenure(p._id, Number(e.target.value)), 'Promotion tenure updated')}
+              <div key={p._id} className="grid gap-4 p-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+                <div className="min-w-0">
+                  <h3 className="truncate font-bold text-slate-800">{p.shopName}</h3>
+                  <p className="truncate text-xs text-slate-500">
+                    {p.category === 'Other' ? p.customCategory : p.category} · {p.email} · {p.products?.length || 0} products
+                  </p>
+                  <p className="mt-1 truncate text-xs font-semibold text-gyellow">
+                    Promotion: {p.promo?.days || 0} days free
+                    {p.promo?.days > 0 && p.promo?.startDate
+                      ? ` (since ${new Date(p.promo.startDate).toLocaleDateString()})`
+                      : ''}
+                  </p>
+                </div>
+                {/* The column template repeats the widths each control already carries, and every
+                    control pins itself to its own column, so a row that has no phone (no Call or
+                    WhatsApp button) still lines up with the rows that do. */}
+                <div className="flex flex-wrap items-center gap-2 xl:grid xl:grid-cols-[150px_78px_116px_104px_100px_116px_80px]">
+                  <select
+                    aria-label={`Promotion tenure for ${p.shopName}`}
+                    className="input !h-9 !w-[150px] !rounded-full !px-3 !py-0 text-xs xl:col-start-1"
+                    value={p.promo?.days || 0}
+                    disabled={busy}
+                    onChange={(e) => run(() => adminService.setTenure(p._id, Number(e.target.value)), 'Promotion tenure updated')}
+                  >
+                    {TENURES.map(([d, label]) => (
+                      <option key={d} value={d}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  {/* Reaching the owner comes before the record state, so the two links sit
+                      right after the subscription instead of under the details. */}
+                  {tel && (
+                    <a href={tel} className={`${CONTACT_BTN} !w-[78px] xl:col-start-2`} title={`Call ${p.phone}`}>
+                      <PhoneIcon className="h-4 w-4 text-primary" />
+                      Call
+                    </a>
+                  )}
+                  {wa && (
+                    <a
+                      href={wa}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${CONTACT_BTN} !w-[116px] xl:col-start-3`}
+                      title={`Message ${p.shopName} on WhatsApp`}
                     >
-                      {TENURES.map(([d, label]) => (
-                        <option key={d} value={d}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                    <button className="btn-outline !py-2 text-sm" onClick={() => setExpanded(expanded === p._id ? null : p._id)}>
-                      {expanded === p._id ? 'Hide products' : 'Products'}
-                    </button>
-                    <button
-                      className={`rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
-                        p.verified
-                          ? 'bg-ggreen text-white shadow-pill'
-                          : 'bg-white text-slate-600 shadow-pill hover:text-ggreen'
-                      }`}
-                      disabled={busy}
-                      title="Verify this profile once the owner contacts you on WhatsApp"
-                      onClick={() =>
-                        run(
-                          () => adminService.setVerified(p._id, !p.verified),
-                          p.verified ? 'Verification removed' : 'Profile verified'
-                        )
-                      }
-                    >
-                      {p.verified ? '✓ Verified' : 'Verify'}
-                    </button>
-                    <button
-                      className={`rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
-                        p.suggested
-                          ? 'bg-primary text-white shadow-pill'
-                          : 'bg-white text-slate-600 shadow-pill hover:text-primary'
-                      }`}
-                      disabled={busy}
-                      title="Show this profile in 'Suggested by us' on the home page"
-                      onClick={() =>
-                        run(
-                          () => adminService.setSuggested(p._id, !p.suggested),
-                          p.suggested ? 'Removed from suggested' : 'Added to suggested'
-                        )
-                      }
-                    >
-                      {p.suggested ? '★ Suggested' : '☆ Suggest'}
-                    </button>
-                    <button
-                      className="rounded-full bg-gred/10 px-4 py-2 text-sm font-semibold text-gred transition hover:bg-gred hover:text-white"
-                      disabled={busy}
-                      onClick={() => {
-                        if (window.confirm(`Delete profile "${p.shopName}" permanently?`))
-                          run(() => adminService.deleteProfile(p._id), 'Profile deleted');
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                      <WhatsAppIcon className="h-4 w-4 text-ggreen" />
+                      WhatsApp
+                    </a>
+                  )}
+                  <button
+                    className={`${ACT} !w-[104px] border border-slate-200 bg-white text-slate-700 hover:border-primary hover:text-primary xl:col-start-4`}
+                    onClick={() => setExpanded(expanded === p._id ? null : p._id)}
+                  >
+                    {expanded === p._id ? 'Hide products' : 'Products'}
+                  </button>
+                  <button
+                    className={`${ACT} !w-[100px] xl:col-start-5 ${p.verified ? 'bg-ggreen text-white' : 'bg-white text-slate-600 hover:text-ggreen'}`}
+                    disabled={busy}
+                    title="Verify this profile once the owner contacts you on WhatsApp"
+                    onClick={() =>
+                      run(
+                        () => adminService.setVerified(p._id, !p.verified),
+                        p.verified ? 'Verification removed' : 'Profile verified'
+                      )
+                    }
+                  >
+                    {p.verified ? '✓ Verified' : 'Verify'}
+                  </button>
+                  <button
+                    className={`${ACT} !w-[116px] xl:col-start-6 ${p.suggested ? 'bg-primary text-white' : 'bg-white text-slate-600 hover:text-primary'}`}
+                    disabled={busy}
+                    title="Show this profile in 'Suggested by us' on the home page"
+                    onClick={() =>
+                      run(
+                        () => adminService.setSuggested(p._id, !p.suggested),
+                        p.suggested ? 'Removed from suggested' : 'Added to suggested'
+                      )
+                    }
+                  >
+                    {p.suggested ? '★ Suggested' : '☆ Suggest'}
+                  </button>
+                  <button
+                    className={`${ACT} !w-[80px] bg-gred/10 text-gred hover:bg-gred hover:text-white xl:col-start-7`}
+                    disabled={busy}
+                    onClick={() => {
+                      if (window.confirm(`Delete profile "${p.shopName}" permanently?`))
+                        run(() => adminService.deleteProfile(p._id), 'Profile deleted');
+                    }}
+                  >
+                    Delete
+                  </button>
                 </div>
                 {expanded === p._id && (
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2 lg:grid-cols-3 xl:col-span-2">
                     {(p.products || []).map((pr) => (
                       <div key={pr._id} className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
                         {pr.image && <img src={assetUrl(pr.image)} alt={pr.name} className="h-12 w-12 rounded-lg object-cover" />}

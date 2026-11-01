@@ -7,6 +7,7 @@ import PromoSlider from '../components/PromoSlider.jsx';
 import SuggestedCarousel from '../components/SuggestedCarousel.jsx';
 import AdPopup from '../components/AdPopup.jsx';
 import HelpWidget from '../components/HelpWidget.jsx';
+import LoadingOverlay, { CardSkeletonRow } from '../components/LoadingOverlay.jsx';
 import searchService from '../services/searchService.js';
 import { useSiteSettings } from '../context/SiteSettingsContext.jsx';
 import Seo from '../seo/Seo.jsx';
@@ -14,12 +15,19 @@ import { homeSeo } from '../seo/pages.js';
 import { HOMEPAGE_H1 } from '../seo/site.js';
 
 export default function Landing() {
-  const [suggested, setSuggested] = useState([]);
-  const { featuredLive, homeFiltersLive } = useSiteSettings();
+  // null means "not answered yet", which is what keeps the empty-state card from showing while
+  // a slow backend is still connecting.
+  const [suggested, setSuggested] = useState(null);
+  const { featuredLive, homeFiltersLive, ready: settingsReady } = useSiteSettings();
 
   useEffect(() => {
-    searchService.suggested().then((d) => setSuggested(d.profiles || [])).catch(() => setSuggested([]));
+    searchService
+      .suggested()
+      .then((d) => setSuggested(d.profiles || []))
+      .catch(() => setSuggested([]));
   }, []);
+
+  const loading = suggested === null || !settingsReady;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -43,7 +51,9 @@ export default function Landing() {
               View all
             </Link>
           </div>
-          {suggested.length ? (
+          {loading ? (
+            <CardSkeletonRow />
+          ) : suggested.length ? (
             <SuggestedCarousel profiles={suggested} />
           ) : (
             <div className="card grid place-items-center p-10 text-sm text-slate-400">
@@ -57,6 +67,8 @@ export default function Landing() {
         </section>
       </main>
       <Footer />
+      {/* Mounted last on purpose: the fixed veil must paint over the popup and help widget too. */}
+      {loading && <LoadingOverlay />}
       <AdPopup />
       <HelpWidget />
     </div>

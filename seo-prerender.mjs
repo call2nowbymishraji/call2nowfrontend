@@ -23,7 +23,7 @@ import {
   SEARCH_HEADING,
   termsSeo,
 } from './src/seo/pages.js';
-import { HOMEPAGE_H1 } from './src/seo/site.js';
+import { HOMEPAGE_H1, isReservedSlug } from './src/seo/site.js';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const DIST = join(ROOT, 'dist');
@@ -118,7 +118,7 @@ function homeBody(topProfiles) {
   const cards = topProfiles
     .map(
       (p) => `    <li class="rounded-2xl border border-slate-100 bg-white p-4 shadow-card">
-      <a class="block text-base font-bold text-slate-900 hover:text-primary" href="/b/${esc(p.pageSlug)}">${esc(p.shopName)}</a>
+      <a class="block text-base font-bold text-slate-900 hover:text-primary" href="/${esc(p.pageSlug)}">${esc(p.shopName)}</a>
       <p class="mt-1 text-sm text-slate-500">${esc([p.categoryLabel, p.locality].filter(Boolean).join(' · '))}</p>
       ${p.description ? `<p class="mt-2 line-clamp-3 text-sm text-slate-600">${esc(p.description)}</p>` : ''}
     </li>`
@@ -346,6 +346,12 @@ try {
   } catch (error) {
     console.warn(`[seo] business pages skipped this build: ${error.message}`);
   }
+  // Business pages now live at /<slug>, so a slug that spells an app route or a built file
+  // would overwrite that page. The server refuses those names when it mints a slug; this
+  // defends against rows created before the guard existed.
+  const blocked = profiles.filter((p) => isReservedSlug(p.pageSlug)).map((p) => p.pageSlug);
+  if (blocked.length) console.warn(`[seo] skipped reserved slug(s): ${blocked.join(', ')}`);
+  profiles = profiles.filter((p) => !isReservedSlug(p.pageSlug));
 
   const labels = profiles.map((p) => ({
     ...p,
@@ -367,10 +373,21 @@ try {
   const search = searchSeo();
   write('search/index.html', buildDocument(search, screenBody(SEARCH_HEADING, search.description)));
 
-  profiles.forEach((profile) => write(`b/${profile.pageSlug}/index.html`, buildDocument(profileSeo(profile), profileBody(profile))));
+  // Written at the root, so a page directory is only ever a plain slug. Anything else (a dot,
+  // a slash, an uppercase letter) comes from data this build should not trust with a path.
+  const WRITABLE_SLUG = /^[a-z0-9][a-z0-9-]*$/;
+  let written = 0;
+  profiles.forEach((profile) => {
+    if (!WRITABLE_SLUG.test(String(profile.pageSlug || ''))) {
+      console.warn(`[seo] skipped "${profile.pageSlug}": not a writable slug`);
+      return;
+    }
+    write(`${profile.pageSlug}/index.html`, buildDocument(profileSeo(profile), profileBody(profile)));
+    written += 1;
+  });
 
   console.log(
-    `[seo] initial HTML written: /, /privacy, /terms, /404.html, ${PRIVATE_SCREENS.length + 1} noindex screens and ${profiles.length} business page(s)`,
+    `[seo] initial HTML written: /, /privacy, /terms, /404.html, ${PRIVATE_SCREENS.length + 1} noindex screens and ${written} business page(s)`,
   );
 } catch (error) {
   // A build must never break because the SEO step failed.

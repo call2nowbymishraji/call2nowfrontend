@@ -1,4 +1,4 @@
-// Netlify Edge Function, mounted on /b/* only.
+// Netlify Edge Function, mounted on /* because business pages live at the root.
 // A removed or never-existing business page has to answer with a real HTTP 404, not a
 // 200 that merely renders "Profile not found". Every uncertainty fails open: the request
 // is passed on so a slow or sleeping API can never turn a live page into a 404.
@@ -8,17 +8,52 @@ const API_ORIGIN = String(
 
 const PROBE_TIMEOUT_MS = 4000;
 
-function slugFrom(pathname) {
-  const raw = pathname.replace(/^\/b\/?/, '').split('/')[0] || '';
+const VALID_SLUG = /^[a-z0-9][a-z0-9-]*$/;
+
+// Only a single, unreserved path segment can be a business page. Everything else (an app
+// route, a built file, the legacy /b/ prefix, an asset) is passed through untouched. Keep in
+// step with RESERVED_SEGMENTS in src/seo/site.js; this file is deployed standalone.
+const RESERVED = new Set([
+  'login',
+  'signup',
+  'search',
+  'create-profile',
+  'profile',
+  'admin',
+  'privacy',
+  'terms',
+  'b',
+  'index.html',
+  '404.html',
+  'favicon.png',
+  'logo.png',
+  'og-cover.png',
+  'robots.txt',
+  'upi-qr.png',
+  'sitemap.xml',
+  'sitemap-index.xml',
+  'assets',
+  '_redirects',
+  '.netlify',
+  '.well-known',
+]);
+
+function profileSlug(pathname) {
+  let decoded;
   try {
-    return decodeURIComponent(raw).trim();
+    decoded = decodeURIComponent(pathname);
   } catch {
-    return '';
+    return null;
   }
+  const parts = decoded.split('/').filter(Boolean);
+  if (parts.length !== 1) return null;
+  const segment = parts[0].trim().toLowerCase();
+  if (!segment || RESERVED.has(segment) || !VALID_SLUG.test(segment)) return null;
+  return segment;
 }
 
-// An empty slug is a malformed URL and can never be a real page, so it is the only case
-// that is answered without consulting the API.
+// Only reached once the API has confirmed the business is gone, so the 404 document is
+// fetched rather than a soft 200 that claims a page exists.
 async function notFoundPage(origin) {
   try {
     const file = await fetch(new URL('/404.html', origin), { cache: 'no-store' });
@@ -35,12 +70,10 @@ async function notFoundPage(origin) {
 
 export default async (request, context) => {
   const url = new URL(request.url);
-  const slug = slugFrom(url.pathname);
+  const slug = profileSlug(url.pathname);
 
-  if (!slug) {
-    const page = await notFoundPage(url.origin);
-    return page || (await context.next());
-  }
+  // Not a business URL, so it is not this function's decision to make.
+  if (!slug) return context.next();
 
   let exists = null;
   try {

@@ -3,6 +3,7 @@ import { paletteFor } from '../utils/categories.js';
 import { profileLocality } from '../utils/geo.js';
 import { callLink, waLink, mapsLink } from '../utils/contact.js';
 import { assetUrl } from '../services/api.js';
+import { profilePath } from '../seo/site.js';
 
 export default function ProfileCard({ profile }) {
   const p = paletteFor(profile.category || profile.shopName);
@@ -11,7 +12,7 @@ export default function ProfileCard({ profile }) {
   const tel = callLink(profile);
   const wa = waLink(profile);
   const maps = mapsLink(profile);
-  const href = `/b/${profile.pageSlug}`;
+  const href = profilePath(profile.pageSlug);
   const category = profile.category === 'Other' ? profile.customCategory : profile.category;
   const products = profile.products || [];
 

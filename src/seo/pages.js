@@ -8,6 +8,7 @@ import {
   OG_IMAGE_ALT,
   ROBOTS,
   absoluteUrl,
+  profilePath,
 } from './site.js';
 
 const clip = (value, max) => {
@@ -106,7 +107,7 @@ export function localBusinessJsonLd(profile) {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: profile.shopName,
-    url: absoluteUrl(`/b/${profile.pageSlug}`),
+    url: absoluteUrl(profilePath(profile.pageSlug)),
   };
   if (profile.description) node.description = clip(profile.description, 300);
   const image = socialImage(profile);
@@ -181,7 +182,7 @@ export function profileSeo(profile) {
         `Browse ${profile.shopName}${category ? `, a ${category.toLowerCase()} business` : ''}${where} on Call2Now. See products, photos and contact details.`,
         155
       );
-  const path = `/b/${profile.pageSlug}`;
+  const path = profilePath(profile.pageSlug);
   return {
     title: titleFor(label),
     description,
@@ -211,7 +212,7 @@ export function profileSeo(profile) {
 // A slug that is missing, removed or never existed must not publish a page that claims a
 // business exists. No index, no structured data, canonical kept so the URL stays stable.
 export function missingProfileSeo(slug) {
-  const path = `/b/${slug}`;
+  const path = profilePath(slug);
   return {
     title: titleFor('Business page not found'),
     description: clip(
@@ -344,7 +345,7 @@ export const privateScreenSeo = (path) => {
 // Shown while a business page is still loading. It states what the URL is without
 // claiming anything about the business behind it.
 export function profilePendingSeo(slug) {
-  const path = `/b/${slug}`;
+  const path = profilePath(slug);
   return {
     title: titleFor('Business profile'),
     description: clip(`Loading this business profile on Call2Now.`, 155),

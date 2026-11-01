@@ -23,9 +23,13 @@
   # of 10 seconds is kept, so the sitemap function times its own API call at 8 seconds and
   # answers with a valid static-only file if the backend is still cold.
 
+# Business pages live at the root, so the 404 check has to see every path. It only acts on a
+# single unreserved segment and passes everything else straight through; /assets/ is excluded
+# outright so the bundle does not cost one edge invocation per file.
 [[edge_functions]]
   function = "profile-status"
-  path = "/b/*"
+  path = "/*"
+  excluded_path = "/assets/*"
 
 # Generated from the live profile list, so new pages become eligible without a redeploy.
 [[redirects]]
@@ -33,16 +37,13 @@
   to = "/.netlify/functions/sitemap"
   status = 200
 
-# A business page only exists if it was generated. Serving /index.html here would give every
-# mistyped or removed slug a 200 with the homepage title and canonical (a soft 404 Google
-# ignores badly), so anything under /b/ that is not a real file gets the genuine 404 document.
-# This holds even before the backend's /api/seo routes are deployed; the edge function adds
-# the case a static rule cannot see: a stale generated file for a profile that was removed.
+# Business pages used to live at /b/<slug>. Those URLs are shared and already in Google's
+# index, so the old prefix forwards permanently to the root form and passes its status on.
 [[redirects]]
   from = "/b/*"
-  to = "/404.html"
-  status = 404
-  force = false
+  to = "/:splat"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/login"

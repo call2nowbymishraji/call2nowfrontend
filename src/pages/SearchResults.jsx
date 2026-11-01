@@ -5,6 +5,7 @@ import Footer from '../components/Footer.jsx';
 import SearchBar from '../components/SearchBar.jsx';
 import ProfileCard from '../components/ProfileCard.jsx';
 import SideAdRail from '../components/SideAds.jsx';
+import LoadingOverlay, { CardSkeleton } from '../components/LoadingOverlay.jsx';
 import searchService from '../services/searchService.js';
 import Seo from '../seo/Seo.jsx';
 import { SEARCH_HEADING, searchSeo } from '../seo/pages.js';
@@ -42,7 +43,7 @@ export default function SearchResults() {
               {loading ? (
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="card h-72 animate-pulse bg-slate-100" />
+                    <CardSkeleton key={i} />
                   ))}
                 </div>
               ) : results.length ? (
@@ -62,6 +63,7 @@ export default function SearchResults() {
         <SideAdRail side="right" />
       </div>
       <Footer />
+      {loading && <LoadingOverlay />}
     </div>
   );
 }

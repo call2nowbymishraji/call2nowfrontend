@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import searchService from '../services/searchService.js';
 import { assetUrl } from '../services/api.js';
+import { profilePath } from '../seo/site.js';
 
 const BRAND_SLIDE = {
   _id: 'brand-call2now',
@@ -59,7 +60,7 @@ export default function PromoSlider() {
               );
             }
             const img = assetUrl(s.image, 900);
-            const to = s.profile ? `/b/${s.profile.pageSlug}` : s.customUrl || '#';
+            const to = s.profile ? profilePath(s.profile.pageSlug) : s.customUrl || '#';
             const inner = (
               <>
                 {img ? (
