@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import searchService from '../services/searchService.js';
+import { useRegion } from '../context/RegionContext.jsx';
+import { useLang } from '../context/LangContext.jsx';
 import { assetUrl } from '../services/api.js';
 import { profilePath } from '../seo/site.js';
 
@@ -14,10 +16,15 @@ const BRAND_SLIDE = {
 export default function PromoSlider() {
   const [slides, setSlides] = useState([]);
   const [idx, setIdx] = useState(0);
+  const { country } = useRegion();
+  const { t } = useLang();
 
   useEffect(() => {
-    searchService.slides().then((d) => setSlides(d.slides || [])).catch(() => setSlides([]));
-  }, []);
+    searchService
+      .slides(country)
+      .then((d) => setSlides(d.slides || []))
+      .catch(() => setSlides([]));
+  }, [country]);
 
   const all = useMemo(() => [BRAND_SLIDE, ...slides], [slides]);
 
@@ -34,8 +41,8 @@ export default function PromoSlider() {
   return (
     <section className="relative mx-auto w-full max-w-[1400px] px-4">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="section-title">Featured businesses</h2>
-        <span className="text-xs font-semibold uppercase tracking-wide text-gyellow">Paid promotions</span>
+        <h2 className="section-title">{t('Featured businesses')}</h2>
+        <span className="text-xs font-semibold uppercase tracking-wide text-gyellow">{t('Paid promotions')}</span>
       </div>
       <div className="relative overflow-hidden rounded-2xl shadow-card">
         <div className="flex transition-transform duration-500" style={{ transform: `translateX(-${idx * 100}%)` }}>
@@ -48,11 +55,11 @@ export default function PromoSlider() {
                     <div className="relative flex h-64 flex-col justify-center bg-black/10 px-8 sm:h-80">
                       <div className="flex items-center gap-3">
                         <img src="/logo.png" alt="Call2Now" className="h-12 w-auto rounded-xl bg-white/95 p-1 shadow" />
-                        <h3 className="text-2xl font-extrabold text-white drop-shadow sm:text-3xl">{s.title}</h3>
+                        <h3 className="text-2xl font-extrabold text-white drop-shadow sm:text-3xl">{t(s.title)}</h3>
                       </div>
-                      <p className="mt-2 max-w-xl text-sm text-white/95">{s.subtitle}</p>
+                      <p className="mt-2 max-w-xl text-sm text-white/95">{t(s.subtitle)}</p>
                       <span className="mt-3 inline-flex w-fit rounded-full bg-white px-4 py-1.5 text-xs font-bold text-primary">
-                        Get started free
+                        {t('Get started free')}
                       </span>
                     </div>
                   </Link>
@@ -72,7 +79,7 @@ export default function PromoSlider() {
                   <h3 className="text-2xl font-extrabold text-white drop-shadow sm:text-3xl">{s.title}</h3>
                   {s.subtitle && <p className="mt-1 max-w-xl text-sm text-white/90">{s.subtitle}</p>}
                   <span className="mt-3 inline-flex w-fit rounded-full bg-white px-4 py-1.5 text-xs font-bold text-primary">
-                    View profile
+                    {t('View profile')}
                   </span>
                 </div>
               </>
@@ -95,14 +102,14 @@ export default function PromoSlider() {
             <button
               onClick={() => setIdx((i) => (i - 1 + all.length) % all.length)}
               className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-slate-700 shadow hover:bg-white"
-              aria-label="Previous slide"
+              aria-label={t('Previous slide')}
             >
               ‹
             </button>
             <button
               onClick={() => setIdx((i) => (i + 1) % all.length)}
               className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-slate-700 shadow hover:bg-white"
-              aria-label="Next slide"
+              aria-label={t('Next slide')}
             >
               ›
             </button>
@@ -112,7 +119,7 @@ export default function PromoSlider() {
                   key={s._id}
                   onClick={() => setIdx(i)}
                   className={`h-2 rounded-full transition-all ${i === idx ? 'w-6 bg-white' : 'w-2 bg-white/60'}`}
-                  aria-label={`Go to slide ${i + 1}`}
+                  aria-label={t('Go to slide {n}', { n: i + 1 })}
                 />
               ))}
             </div>

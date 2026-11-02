@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import searchService from '../services/searchService.js';
 import { assetUrl } from '../services/api.js';
+import { useLang } from '../context/LangContext.jsx';
 
 const dismissed = (id) => sessionStorage.getItem(`c2n_ad_dismissed_${id}`) === '1';
 const dismiss = (id) => sessionStorage.setItem(`c2n_ad_dismissed_${id}`, '1');
@@ -12,6 +13,7 @@ export function pickRandom(ads) {
 }
 
 export default function AdPopup() {
+  const { t } = useLang();
   const [ad, setAd] = useState(null);
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export default function AdPopup() {
             setAd(null);
           }}
           className="absolute -right-2 -top-2 grid h-8 w-8 place-items-center rounded-full bg-slate-800 text-base font-bold text-white shadow hover:bg-slate-600"
-          aria-label="Close ad"
+          aria-label={t('Close ad')}
         >
           ×
         </button>

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo.jsx';
+import ViewPickers from '../components/ViewPickers.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import ModeTabs from '../components/ModeTabs.jsx';
 import DobSelects from '../components/DobSelects.jsx';
 import authService from '../services/authService.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useLang } from '../context/LangContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { errMsg } from '../services/api.js';
 import Seo from '../seo/Seo.jsx';
@@ -24,13 +26,14 @@ export default function Login() {
   const [forgotForm, setForgotForm] = useState({ code: '', password: '', confirm: '', phone: '', dob: EMPTY_DOB });
   const [error, setError] = useState('');
   const { login, phoneLogin, googleLogin, startSession } = useAuth();
+  const { t } = useLang();
   const toast = useToast();
   const navigate = useNavigate();
 
   const digitsOnly = (v) => v.replace(/\D/g, '').slice(0, 10);
 
   const afterAuth = (data) => {
-    toast(`Welcome back, ${data.user.name}`);
+    toast(t('Welcome back, {name}', { name: data.user.name }));
     navigate(data.hasProfile ? '/profile' : '/create-profile');
   };
 
@@ -52,9 +55,9 @@ export default function Login() {
   const submitPhone = async (e) => {
     e.preventDefault();
     setError('');
-    if (phoneForm.phone.length !== 10) return setError('10-digit mobile number required');
+    if (phoneForm.phone.length !== 10) return setError(t('10-digit mobile number required'));
     if (!phoneForm.password && !phoneDobFilled(phoneForm.dob))
-      return setError('Enter your password or select your date of birth');
+      return setError(t('Enter your password or select your date of birth'));
     setBusy(true);
     try {
       const payload = phoneForm.password
@@ -89,7 +92,7 @@ export default function Login() {
     try {
       const res = await authService.forgotRequest(forgot.email);
       setForgot({ ...forgot, step: 'otp', devCode: res.devCode });
-      toast('OTP sent to your email', 'info');
+      toast(t('OTP sent to your email'), 'info');
     } catch (err) {
       setError(errMsg(err));
     } finally {
@@ -113,14 +116,14 @@ export default function Login() {
 
   const forgotReset = async (e) => {
     e.preventDefault();
-    if (forgotForm.password.length < 6) return setError('Minimum 6 characters');
-    if (forgotForm.password !== forgotForm.confirm) return setError('Passwords do not match');
+    if (forgotForm.password.length < 6) return setError(t('Minimum 6 characters'));
+    if (forgotForm.password !== forgotForm.confirm) return setError(t('Passwords do not match'));
     setBusy(true);
     setError('');
     try {
       await authService.forgotReset(forgot.resetToken, forgotForm.password);
       setForgot(null);
-      toast('Password updated. Logging you in...');
+      toast(t('Password updated. Logging you in...'));
       afterAuth(await login(forgot.email, forgotForm.password));
     } catch (err) {
       setError(errMsg(err));
@@ -134,10 +137,10 @@ export default function Login() {
   const forgotByPhone = async (e) => {
     e.preventDefault();
     setError('');
-    if (forgotForm.phone.length !== 10) return setError('10-digit mobile number required');
-    if (!phoneDobFilled(forgotForm.dob)) return setError('Select your date of birth');
-    if (forgotForm.password.length < 6) return setError('Minimum 6 characters');
-    if (forgotForm.password !== forgotForm.confirm) return setError('Passwords do not match');
+    if (forgotForm.phone.length !== 10) return setError(t('10-digit mobile number required'));
+    if (!phoneDobFilled(forgotForm.dob)) return setError(t('Select your date of birth'));
+    if (forgotForm.password.length < 6) return setError(t('Minimum 6 characters'));
+    if (forgotForm.password !== forgotForm.confirm) return setError(t('Passwords do not match'));
     setBusy(true);
     try {
       const data = await authService.forgotPhoneReset({
@@ -146,7 +149,7 @@ export default function Login() {
         newPassword: forgotForm.password,
       });
       setForgot(null);
-      toast('Password updated. Logging you in...');
+      toast(t('Password updated. Logging you in...'));
       afterAuth(startSession(data));
     } catch (err) {
       setError(errMsg(err));
@@ -166,8 +169,11 @@ export default function Login() {
       <div className="card w-full max-w-md p-8">
         <div className="text-center">
           <Logo to="/" className="mx-auto h-12 w-auto" />
-          <h1 className="mt-4 text-2xl font-extrabold text-slate-900">Log In</h1>
-          <p className="mt-1 text-sm text-slate-500">Log in to access your profile</p>
+          <div className="mt-3 flex justify-center">
+            <ViewPickers showLocation={false} />
+          </div>
+          <h1 className="mt-4 text-2xl font-extrabold text-slate-900">{t('Log In')}</h1>
+          <p className="mt-1 text-sm text-slate-500">{t('Log in to access your profile')}</p>
         </div>
         <div className="mt-6">
           <ModeTabs
@@ -186,20 +192,20 @@ export default function Login() {
         {mode === 'email' ? (
           <form onSubmit={submit} className="mt-6 space-y-4">
             <input
-              aria-label="Email address"
+              aria-label={t('Email address')}
               className="input"
               type="email"
-              placeholder="Email Address"
+              placeholder={t('Email Address')}
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
               required
             />
             <div className="relative">
               <input
-                aria-label="Password"
+                aria-label={t('Password')}
                 className="input pr-12"
                 type={showPass ? 'text' : 'password'}
-                placeholder="Password"
+                placeholder={t('Password')}
                 value={form.password}
                 onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                 required
@@ -208,37 +214,37 @@ export default function Login() {
                 type="button"
                 onClick={() => setShowPass((s) => !s)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                aria-label="Toggle password visibility"
+                aria-label={t('Toggle password visibility')}
               >
                 {showPass ? '🙈' : '👁️'}
               </button>
             </div>
             <div className="text-right">
               <button type="button" className="text-sm font-semibold text-primary hover:underline" onClick={openForgot}>
-                Forgot Password?
+                {t('Forgot Password?')}
               </button>
             </div>
             {error && <p className="err text-center">{error}</p>}
             <button type="submit" disabled={busy} className="btn-primary w-full">
-              {busy ? 'Logging in...' : 'Log In'}
+              {busy ? t('Logging in...') : t('Log In')}
             </button>
           </form>
         ) : (
           <form onSubmit={submitPhone} className="mt-6 space-y-4" noValidate>
             <input
-              aria-label="Mobile number"
+              aria-label={t('Mobile number')}
               className="input"
               inputMode="numeric"
-              placeholder="10-digit mobile"
+              placeholder={t('10-digit mobile')}
               value={phoneForm.phone}
               onChange={(e) => setPhoneForm((f) => ({ ...f, phone: digitsOnly(e.target.value) }))}
             />
             <div className="relative">
               <input
-                aria-label="Password"
+                aria-label={t('Password')}
                 className="input pr-12"
                 type={showPass ? 'text' : 'password'}
-                placeholder="Password"
+                placeholder={t('Password')}
                 value={phoneForm.password}
                 onChange={(e) => setPhoneForm((f) => ({ ...f, password: e.target.value }))}
               />
@@ -246,13 +252,13 @@ export default function Login() {
                 type="button"
                 onClick={() => setShowPass((s) => !s)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                aria-label="Toggle password visibility"
+                aria-label={t('Toggle password visibility')}
               >
                 {showPass ? '🙈' : '👁️'}
               </button>
             </div>
             <div className="flex items-center gap-3 text-xs font-semibold text-slate-400">
-              <span className="h-px flex-1 bg-slate-200" /> OR <span className="h-px flex-1 bg-slate-200" />
+              <span className="h-px flex-1 bg-slate-200" /> {t('OR')} <span className="h-px flex-1 bg-slate-200" />
             </div>
             <DobSelects
               value={phoneForm.dob}
@@ -261,24 +267,24 @@ export default function Login() {
             />
             <div className="text-right">
               <button type="button" className="text-sm font-semibold text-primary hover:underline" onClick={openForgot}>
-                Forgot Password?
+                {t('Forgot Password?')}
               </button>
             </div>
             {error && <p className="err text-center">{error}</p>}
             <button type="submit" disabled={busy} className="btn-primary w-full">
-              {busy ? 'Logging in...' : 'Log In'}
+              {busy ? t('Logging in...') : t('Log In')}
             </button>
           </form>
         )}
 
         <div className="my-5 flex items-center gap-3 text-xs font-semibold text-slate-400">
-          <span className="h-px flex-1 bg-slate-200" /> OR <span className="h-px flex-1 bg-slate-200" />
+          <span className="h-px flex-1 bg-slate-200" /> {t('OR')} <span className="h-px flex-1 bg-slate-200" />
         </div>
         <GoogleButton onCredential={onGoogle} />
         <p className="mt-6 text-center text-sm text-slate-500">
-          Don&apos;t have an account?{' '}
+          {t("Don't have an account?")}{' '}
           <Link to="/signup" className="font-semibold text-primary hover:underline">
-            Sign Up
+            {t('Sign Up')}
           </Link>
         </p>
       </div>
@@ -286,7 +292,7 @@ export default function Login() {
       {forgot && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 px-4" role="dialog" aria-modal="true">
           <div className="card max-h-[90vh] w-full max-w-sm overflow-y-auto p-6">
-            <h3 className="text-lg font-bold text-slate-800">Forgot password</h3>
+            <h3 className="text-lg font-bold text-slate-800">{t('Forgot password')}</h3>
             <div className="mt-4">
               <ModeTabs
                 value={forgot.method}
@@ -301,14 +307,14 @@ export default function Login() {
             {forgot.method === 'phone' && (
               <form onSubmit={forgotByPhone} className="mt-4 space-y-3" noValidate>
                 <p className="text-sm text-slate-500">
-                  Enter your registered number and date of birth, then set a new password.
+                  {t('Enter your registered number and date of birth, then set a new password.')}
                 </p>
                 <input
-                  aria-label="Mobile number for password reset"
+                  aria-label={t('Mobile number for password reset')}
                   className="input"
                   inputMode="numeric"
                   autoFocus
-                  placeholder="10-digit mobile"
+                  placeholder={t('10-digit mobile')}
                   value={forgotForm.phone}
                   onChange={(e) => setForgotForm((f) => ({ ...f, phone: digitsOnly(e.target.value) }))}
                 />
@@ -318,52 +324,52 @@ export default function Login() {
                   label="Date of birth"
                 />
                 <input
-                  aria-label="New password"
+                  aria-label={t('New password')}
                   className="input"
                   type="password"
-                  placeholder="New password"
+                  placeholder={t('New password')}
                   value={forgotForm.password}
                   onChange={(e) => setForgotForm((f) => ({ ...f, password: e.target.value }))}
                 />
                 <input
-                  aria-label="Confirm new password"
+                  aria-label={t('Confirm new password')}
                   className="input"
                   type="password"
-                  placeholder="Confirm new password"
+                  placeholder={t('Confirm new password')}
                   value={forgotForm.confirm}
                   onChange={(e) => setForgotForm((f) => ({ ...f, confirm: e.target.value }))}
                 />
                 {error && <p className="err">{error}</p>}
                 <button type="submit" disabled={busy} className="btn-primary w-full">
-                  Update Password
+                  {t('Update Password')}
                 </button>
               </form>
             )}
 
             {forgot.method === 'email' && forgot.step === 'email' && (
               <form onSubmit={forgotEmail} className="mt-4">
-                <p className="mb-3 text-sm text-slate-500">Enter your registered email to receive an OTP.</p>
+                <p className="mb-3 text-sm text-slate-500">{t('Enter your registered email to receive an OTP.')}</p>
                 <input
-                  aria-label="Email address for password reset"
+                  aria-label={t('Email address for password reset')}
                   className="input"
                   type="email"
                   autoFocus
-                  placeholder="Email Address"
+                  placeholder={t('Email Address')}
                   value={forgot.email}
                   onChange={(e) => setForgot({ ...forgot, email: e.target.value })}
                   required
                 />
                 {error && <p className="err">{error}</p>}
                 <button type="submit" disabled={busy} className="btn-primary mt-4 w-full">
-                  Send OTP
+                  {t('Send OTP')}
                 </button>
               </form>
             )}
             {forgot.method === 'email' && forgot.step === 'otp' && (
               <form onSubmit={forgotOtp} className="mt-4">
-                <p className="mb-3 text-sm text-slate-500">Enter the 6-digit code sent to {forgot.email}.</p>
+                <p className="mb-3 text-sm text-slate-500">{t('Enter the 6-digit code sent to {email}.', { email: forgot.email })}</p>
                 <input
-                  aria-label="Six digit verification code"
+                  aria-label={t('Six digit verification code')}
                   className="input text-center text-2xl font-bold tracking-[0.5em]"
                   maxLength={6}
                   inputMode="numeric"
@@ -374,37 +380,37 @@ export default function Login() {
                 />
                 {forgot.devCode && (
                   <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-center text-xs font-semibold text-amber-700">
-                    Dev mode: your OTP is {forgot.devCode}
+                    {t('Dev mode: your OTP is {code}', { code: forgot.devCode })}
                   </p>
                 )}
                 {error && <p className="err">{error}</p>}
                 <button type="submit" disabled={busy} className="btn-primary mt-4 w-full">
-                  Verify OTP
+                  {t('Verify OTP')}
                 </button>
               </form>
             )}
             {forgot.method === 'email' && forgot.step === 'reset' && (
               <form onSubmit={forgotReset} className="mt-4 space-y-3">
-                <p className="text-sm text-slate-500">Set your new password.</p>
+                <p className="text-sm text-slate-500">{t('Set your new password.')}</p>
                 <input
-                  aria-label="New password"
+                  aria-label={t('New password')}
                   className="input"
                   type="password"
-                  placeholder="New password"
+                  placeholder={t('New password')}
                   value={forgotForm.password}
                   onChange={(e) => setForgotForm((f) => ({ ...f, password: e.target.value }))}
                 />
                 <input
-                  aria-label="Confirm new password"
+                  aria-label={t('Confirm new password')}
                   className="input"
                   type="password"
-                  placeholder="Confirm new password"
+                  placeholder={t('Confirm new password')}
                   value={forgotForm.confirm}
                   onChange={(e) => setForgotForm((f) => ({ ...f, confirm: e.target.value }))}
                 />
                 {error && <p className="err">{error}</p>}
                 <button type="submit" disabled={busy} className="btn-primary w-full">
-                  Update Password
+                  {t('Update Password')}
                 </button>
               </form>
             )}
@@ -413,7 +419,7 @@ export default function Login() {
               className="mt-3 w-full text-center text-xs font-semibold text-slate-400 hover:text-slate-600"
               onClick={() => setForgot(null)}
             >
-              Cancel
+              {t('Cancel')}
             </button>
           </div>
         </div>

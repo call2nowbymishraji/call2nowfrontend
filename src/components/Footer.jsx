@@ -1,17 +1,19 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useLang } from '../context/LangContext.jsx';
 import WhatsAppIcon from './WhatsAppIcon.jsx';
 import { DAY_PRICE, FREE_DAYS, QR_SRC, UPI_ID, YEAR_PRICE, paymentWaLink } from '../utils/payment.js';
 
 export default function Footer() {
   const { user } = useAuth();
+  const { t } = useLang();
   return (
     <footer className="mt-16 bg-slate-900 text-slate-300">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <img src="/logo.png" alt="call2now" className="block h-8 w-auto brightness-110" />
           <p className="mt-4 max-w-xs text-left text-sm leading-6 text-slate-400">
-            Register your business profile and get discovered by your city.
+            {t('Register your business profile and get discovered by your city.')}
           </p>
         </div>
         <div>
@@ -22,14 +24,14 @@ export default function Footer() {
                   to="/profile"
                   className="rounded-full border border-slate-600 px-4 py-2 text-xs font-bold text-slate-200 transition hover:border-white hover:text-white"
                 >
-                  My Profile
+                  {t('My Profile')}
                 </Link>
                 {user.role === 'admin' && (
                   <Link
                     to="/admin"
                     className="rounded-full bg-primary px-4 py-2 text-xs font-bold text-white transition hover:bg-primary/90"
                   >
-                    Admin dashboard
+                    {t('Admin dashboard')}
                   </Link>
                 )}
               </>
@@ -39,35 +41,39 @@ export default function Footer() {
                   to="/login"
                   className="rounded-full border border-slate-600 px-4 py-2 text-xs font-bold text-slate-200 transition hover:border-white hover:text-white"
                 >
-                  Log In
+                  {t('Log In')}
                 </Link>
                 <Link
                   to="/signup"
                   className="rounded-full bg-primary px-4 py-2 text-xs font-bold text-white transition hover:bg-primary/90"
                 >
-                  Sign Up
+                  {t('Sign Up')}
                 </Link>
               </>
             )}
           </div>
-          <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">Contact Us</h4>
+          <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">{t('Contact Us')}</h4>
           <ul className="space-y-2 text-sm">
             <li>helpcall2now@gmail.com</li>
             <li>+91 9305035828</li>
           </ul>
         </div>
         <div>
-          <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">Verify and complete the payment</h4>
+          <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">{t('Verify and complete the payment')}</h4>
           <div className="flex items-start gap-4">
-            <a href={QR_SRC} target="_blank" rel="noreferrer" title="Open the full size QR" className="shrink-0">
-              <img src={QR_SRC} alt="Call2Now UPI payment QR code" className="h-28 w-28 rounded-lg bg-white p-1.5" />
+            <a href={QR_SRC} target="_blank" rel="noreferrer" title={t('Open the full size QR')} className="shrink-0">
+              <img src={QR_SRC} alt={t('Call2Now UPI payment QR code')} className="h-28 w-28 rounded-lg bg-white p-1.5" />
             </a>
             <p className="text-xs leading-5 text-slate-400">
-              Scan this QR in any UPI app. Free for {FREE_DAYS} days, then ₹{DAY_PRICE} per day (₹{YEAR_PRICE} a year).
+              {t('Scan this QR in any UPI app. Free for {freeDays} days, then ₹{dayPrice} per day (₹{yearPrice} a year).', {
+                freeDays: FREE_DAYS,
+                dayPrice: DAY_PRICE,
+                yearPrice: YEAR_PRICE,
+              })}
             </p>
           </div>
           <p className="mt-3 text-xs text-slate-400">
-            UPI ID <span className="font-semibold text-slate-200">{UPI_ID}</span>
+            {t('UPI ID')} <span className="font-semibold text-slate-200">{UPI_ID}</span>
           </p>
           <a
             href={paymentWaLink()}
@@ -76,21 +82,21 @@ export default function Footer() {
             className="mt-3 inline-flex items-center gap-2 rounded-full bg-ggreen px-4 py-2 text-xs font-bold text-white transition hover:brightness-110"
           >
             <WhatsAppIcon className="h-3.5 w-3.5" />
-            Send payment proof
+            {t('Send payment proof')}
           </a>
         </div>
         <div>
-          <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">Our Offices</h4>
+          <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-white">{t('Our Offices')}</h4>
           <ul className="space-y-3 text-sm">
             <li>
-              <p className="font-semibold text-slate-200">Head office</p>
+              <p className="font-semibold text-slate-200">{t('Head office')}</p>
               <p className="mt-0.5 text-left leading-6 text-slate-400">
                 554, Rani Path, Parswanath Colony, Rani Sati Nagar, Nirman Nagar, Brijlalpura, Jaipur, Jaipur Nagar Nigam
                 Area, Rajasthan 302019, India
               </p>
             </li>
             <li>
-              <p className="font-semibold text-slate-200">Branch office</p>
+              <p className="font-semibold text-slate-200">{t('Branch office')}</p>
               <p className="mt-0.5 text-left leading-6 text-slate-400">Raipur, Uttar Pradesh 273309</p>
               <a
                 href="https://maps.app.goo.gl/NVcbgdpkiQec8Uhx8?g_st=awb"
@@ -98,7 +104,7 @@ export default function Footer() {
                 rel="noreferrer"
                 className="mt-1 inline-block text-xs font-semibold text-gblue hover:underline"
               >
-                View on Google Maps
+                {t('View on Google Maps')}
               </a>
             </li>
           </ul>
@@ -107,15 +113,15 @@ export default function Footer() {
       <div className="border-t border-slate-800">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-2 px-4 pt-4 text-xs text-slate-400">
           <Link to="/privacy" className="font-semibold hover:text-white hover:underline">
-            Privacy Policy
+            {t('Privacy Policy')}
           </Link>
           <span>·</span>
           <Link to="/terms" className="font-semibold hover:text-white hover:underline">
-            Terms of Service
+            {t('Terms of Service')}
           </Link>
         </div>
         <div className="px-4 py-4 text-center text-xs text-slate-400">
-          © {new Date().getFullYear()} Call2Now. All rights reserved. · Created by Vaibhav
+          {t('© {year} Call2Now. All rights reserved. · Created by Vaibhav', { year: new Date().getFullYear() })}
         </div>
       </div>
     </footer>

@@ -24,6 +24,12 @@ import {
   termsSeo,
 } from './src/seo/pages.js';
 import { HOMEPAGE_H1, isReservedSlug } from './src/seo/site.js';
+import { DEFAULT_LANG, translate } from './src/i18n/hindi.js';
+import { callLink, waLink } from './src/utils/contact.js';
+
+// The first paint uses the same default language the app boots with, so a visitor whose browser
+// has no stored choice sees no wording change when React mounts.
+const t = (key, vars) => translate(DEFAULT_LANG, key, vars);
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const DIST = join(ROOT, 'dist');
@@ -57,11 +63,11 @@ const metaTag = (attr, name, content) =>
   content ? `<meta ${attr}="${esc(name)}" content="${esc(content)}">` : '';
 
 // The generated first paint starts with the same block height as the React navbar
-// (61px below the sm breakpoint, 67px above it, measured in a real browser), so mounting
-// the app does not push every element on the page down.
+// (102px below the sm breakpoint, where the two view pickers get their own row, and 67px above
+// it, measured in a real browser), so mounting the app does not push the page down.
 const SHELL_NAV_CSS =
-  '<style id="c2n-shell-nav">.c2n-shell-nav{display:flex;align-items:center;height:61px;padding:0 16px}' +
-  '@media (min-width:640px){.c2n-shell-nav{height:67px}}</style>';
+  '<style id="c2n-shell-nav">.c2n-shell-nav{display:flex;align-items:flex-start;height:102px;padding:12px 16px 0}' +
+  '@media (min-width:640px){.c2n-shell-nav{align-items:center;height:67px;padding:0 16px}}</style>';
 
 function headBlock(seo) {
   const { title, description, canonical, robots, type = 'website', image, imageAlt, jsonLd } = seo;
@@ -77,7 +83,7 @@ function headBlock(seo) {
     metaTag('property', 'og:site_name', 'Call2Now'),
     metaTag('property', 'og:image', image),
     metaTag('property', 'og:image:alt', image ? imageAlt : ''),
-    metaTag('property', 'og:locale', image ? 'en_US' : ''),
+    metaTag('property', 'og:locale', image ? 'hi_IN' : ''),
     metaTag('name', 'twitter:card', image ? 'summary_large_image' : 'summary'),
     metaTag('name', 'twitter:title', title),
     metaTag('name', 'twitter:description', description),
@@ -95,7 +101,8 @@ const SHELL = existsSync(join(DIST, 'index.html'))
 // Strip the shell's own homepage defaults first, then add this page's head, so no
 // replacement can ever match the tags that were just written.
 function buildDocument(seo, bodyHtml) {
-  const cleaned = SHELL.replace(/\s*<title>[\s\S]*?<\/title>/i, '')
+  const cleaned = SHELL.replace(/<html([^>]*)>/i, (m, attrs) => `<html${attrs.replace(/\slang="[^"]*"/, '')} lang="${DEFAULT_LANG}">`)
+    .replace(/\s*<title>[\s\S]*?<\/title>/i, '')
     .replace(/\s*<link rel="canonical"[^>]*>/i, '')
     .replace(/\s*<meta\s+name="description"[^>]*>/gi, '')
     .replace(/\s*<meta\s+name="robots"[^>]*>/gi, '')
@@ -126,42 +133,42 @@ function homeBody(topProfiles) {
     .join('\n');
   const listing = topProfiles.length
     ? `<ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">\n${cards}\n  </ul>`
-    : '  <p class="mt-4 text-sm text-slate-500">No business profiles are listed yet. Owners can register for free.</p>';
+    : `  <p class="mt-4 text-sm text-slate-500">${esc(t('No business profiles are listed yet. Owners can register for free.'))}</p>`;
   return `
 <a class="c2n-shell-nav" href="/"><img src="/logo.png" alt="Call2Now" class="h-8 w-auto" /></a>
 <main class="mx-auto max-w-4xl px-4 py-10">
   <h1 class="text-2xl font-extrabold text-slate-900 sm:text-3xl">${esc(HOMEPAGE_H1)}</h1>
   <p class="mt-3 text-sm leading-6 text-slate-600">${esc(homeSeo().description)}</p>
   <form class="mt-6 flex flex-col gap-3 sm:flex-row" action="/search" method="get" role="search">
-    <label class="sr-only" for="c2n-q">Search businesses by name, product or category</label>
-    <input class="input" id="c2n-q" name="q" placeholder="Search business, product or category" />
-    <label class="sr-only" for="c2n-loc">Location, city, area or pin code</label>
-    <input class="input" id="c2n-loc" name="location" placeholder="City, area or pin code" />
-    <button class="btn-primary" type="submit">Search</button>
+    <label class="sr-only" for="c2n-q">${esc(t('Search businesses by name, product or category'))}</label>
+    <input class="input" id="c2n-q" name="q" placeholder="${esc(t('Search anything... (business, product, name)'))}" />
+    <label class="sr-only" for="c2n-loc">${esc(t('Location, city, area or pin code'))}</label>
+    <input class="input" id="c2n-loc" name="location" placeholder="${esc(t('Location (city / area / pin code)'))}" />
+    <button class="btn-primary" type="submit">${esc(t('Search'))}</button>
   </form>
   <p class="mt-4 text-sm leading-6 text-slate-600">
-    Open a business page to see its products and photos, then call, WhatsApp or email the business directly.
-    Business owners can <a class="font-semibold text-primary hover:underline" href="/signup">create a profile</a> and get discovered in their city.
+    ${esc(t('Open a business page to see its products and photos, then call, WhatsApp or email the business directly.'))}
+    ${esc(t('Business owners can'))} <a class="font-semibold text-primary hover:underline" href="/signup">${esc(t('create a profile'))}</a> ${esc(t('and get discovered in their city.'))}
   </p>
-  <h2 class="mt-10 text-lg font-bold text-slate-900">Businesses on Call2Now</h2>
+  <h2 class="mt-10 text-lg font-bold text-slate-900">${esc(t('Businesses on Call2Now'))}</h2>
   ${listing}
   <p class="mt-8 text-sm">
-    <a class="font-semibold text-primary hover:underline" href="/search">Browse all businesses</a>
+    <a class="font-semibold text-primary hover:underline" href="/search">${esc(t('Browse all businesses'))}</a>
     <span class="mx-2 text-slate-300">|</span>
-    <a class="font-semibold text-primary hover:underline" href="/privacy">Privacy Policy</a>
+    <a class="font-semibold text-primary hover:underline" href="/privacy">${esc(t('Privacy Policy'))}</a>
     <span class="mx-2 text-slate-300">|</span>
-    <a class="font-semibold text-primary hover:underline" href="/terms">Terms of Service</a>
+    <a class="font-semibold text-primary hover:underline" href="/terms">${esc(t('Terms of Service'))}</a>
   </p>
 </main>`;
 }
 
 function contactLinks(profile) {
-  const digits = String(profile.phone || '').replace(/\D/g, '');
-  const waDigits = String(profile.whatsapp || profile.phone || '').replace(/\D/g, '');
+  const call = callLink(profile);
+  const wa = waLink(profile);
   const links = [];
-  if (digits) links.push(`<a class="font-semibold text-primary" href="tel:+91${esc(digits)}">Call ${esc(profile.phone)}</a>`);
-  if (waDigits) links.push(`<a class="font-semibold text-ggreen" href="https://wa.me/91${esc(waDigits)}">WhatsApp</a>`);
-  if (profile.email) links.push(`<a class="font-semibold text-slate-700" href="mailto:${esc(profile.email)}">Email</a>`);
+  if (call) links.push(`<a class="font-semibold text-primary" href="${esc(call)}">${esc(t('Call'))} ${esc(profile.phone)}</a>`);
+  if (wa) links.push(`<a class="font-semibold text-ggreen" href="${esc(wa)}">${esc(t('WhatsApp'))}</a>`);
+  if (profile.email) links.push(`<a class="font-semibold text-slate-700" href="mailto:${esc(profile.email)}">${esc(t('Email'))}</a>`);
   return links.join('\n    <span class="text-slate-300">|</span>\n    ');
 }
 
@@ -169,24 +176,27 @@ function profileBody(profile) {
   const category = profile.category === 'Other' ? profile.customCategory : profile.category;
   const address = [profile.address, profile.city, profile.state, profile.pincode].filter(Boolean).join(', ');
   const details = [
-    ['Owner', profile.ownerName],
-    ['Phone', profile.phone],
-    ['WhatsApp', profile.whatsapp],
-    ['Email', profile.email],
-    ['In market since', profile.inMarketSince],
-    ['Operation days', (profile.operationDays || []).join(', ')],
-    ['Timing', profile.operationOpen && profile.operationClose ? `${profile.operationOpen} to ${profile.operationClose}` : ''],
-    ['Online delivery', profile.onlineDelivery ? 'Available' : ''],
-    ['Delivery area', profile.panIndia ? 'Pan India' : ''],
-    ['Page URL', profileSeo(profile).canonical],
+    [t('Owner'), profile.ownerName],
+    [t('Phone'), profile.phone],
+    [t('WhatsApp'), profile.whatsapp],
+    [t('Email'), profile.email],
+    [t('In market since'), profile.inMarketSince],
+    [t('Operation days'), (profile.operationDays || []).map((d) => t(d)).join(', ')],
+    [
+      t('Timing'),
+      profile.operationOpen && profile.operationClose ? t('{open} to {close}', { open: profile.operationOpen, close: profile.operationClose }) : '',
+    ],
+    [t('Online delivery'), profile.onlineDelivery ? t('Available') : ''],
+    [t('Delivery area'), profile.panIndia ? t('Pan India') : ''],
+    [t('Page URL'), profileSeo(profile).canonical],
   ].filter(([, value]) => value !== '' && value !== null && value !== undefined);
   const gallery = (profile.gallery || []).slice(0, 9).map(mediaUrl).filter(Boolean);
   const products = profile.products || [];
 
   return `
-<a class="c2n-shell-nav" href="/"><img src="/logo.png" alt="Call2Now" class="h-8 w-auto" /></a>
+<a class="c2n-shell-nav" href="/"><img src="/logo.png" alt="${esc(t('Call2Now home'))}" class="h-8 w-auto" /></a>
 <main class="mx-auto max-w-4xl px-4 py-10">
-  <h1 class="text-2xl font-extrabold text-slate-900 sm:text-3xl">${esc(profile.shopName)}${profile.verified ? ' (Verified)' : ''}</h1>
+  <h1 class="text-2xl font-extrabold text-slate-900 sm:text-3xl">${esc(profile.shopName)}${profile.verified ? ` ${esc(t('(Verified)'))}` : ''}</h1>
   <p class="mt-2 text-sm text-slate-500">${esc([category, address].filter(Boolean).join(' · '))}</p>
   ${
     profile.shopImage
@@ -198,12 +208,12 @@ function profileBody(profile) {
   </nav>
   ${
     profile.description
-      ? `  <h2 class="mt-8 text-lg font-bold text-slate-900">About</h2>\n  <p class="mt-2 text-sm leading-6 text-slate-600">${esc(profile.description)}</p>`
+      ? `  <h2 class="mt-8 text-lg font-bold text-slate-900">${esc(t('About'))}</h2>\n  <p class="mt-2 text-sm leading-6 text-slate-600">${esc(profile.description)}</p>`
       : ''
   }
   ${
     products.length
-      ? `  <h2 class="mt-8 text-lg font-bold text-slate-900">Products (${products.length})</h2>
+      ? `  <h2 class="mt-8 text-lg font-bold text-slate-900">${esc(t('Products ({count})', { count: products.length }))}</h2>
   <ul class="mt-3 grid gap-3 sm:grid-cols-2">
     ${products
       .map((pr) => {
@@ -229,22 +239,22 @@ function profileBody(profile) {
   }
   ${
     gallery.length
-      ? `  <h2 class="mt-8 text-lg font-bold text-slate-900">Photos (${gallery.length})</h2>
+      ? `  <h2 class="mt-8 text-lg font-bold text-slate-900">${esc(t('Photos ({count})', { count: gallery.length }))}</h2>
   <ul class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
     ${gallery
       .map(
         (src, i) =>
-          `    <li><img class="aspect-[3/4] w-full rounded-xl object-cover" src="${esc(src)}" alt="${esc(profile.shopName)} photo ${i + 1}" /></li>`
+          `    <li><img class="aspect-[3/4] w-full rounded-xl object-cover" src="${esc(src)}" alt="${esc(`${profile.shopName} ${t('Gallery')} ${i + 1}`)}" /></li>`
       )
       .join('\n')}
   </ul>`
       : ''
   }
-  <h2 class="mt-8 text-lg font-bold text-slate-900">Business details</h2>
+  <h2 class="mt-8 text-lg font-bold text-slate-900">${esc(t('Business details'))}</h2>
   <dl class="mt-3 grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
     ${details.map(([label, value]) => `<div><dt class="text-xs font-semibold uppercase text-slate-400">${esc(label)}</dt><dd class="text-slate-700">${esc(value)}</dd></div>`).join('\n    ')}
   </dl>
-  <p class="mt-8 text-sm"><a class="font-semibold text-primary hover:underline" href="/">Back to Call2Now</a></p>
+  <p class="mt-8 text-sm"><a class="font-semibold text-primary hover:underline" href="/">${esc(t('Back to Call2Now'))}</a></p>
 </main>`;
 }
 
@@ -256,26 +266,28 @@ function legalBody(sourceFile) {
   const date = flatten(source.match(/Effective date:\s*([^<]+)</)?.[1] || '');
   const intro = flatten(source.match(/<p className="mt-4 text-sm leading-6 text-slate-600">([\s\S]*?)<\/p>/)?.[1] || '');
   const sections = [...source.matchAll(/<Section title="([^"]+)"/g)].map((m) => m[1]);
+  // The legal wording itself stays English: a Hindi translation of the policy text is its own
+  // content task, so only the shared chrome around it is translated here.
   return `
-<a class="c2n-shell-nav" href="/"><img src="/logo.png" alt="Call2Now" class="h-8 w-auto" /></a>
+<a class="c2n-shell-nav" href="/"><img src="/logo.png" alt="${esc(t('Call2Now home'))}" class="h-8 w-auto" /></a>
 <main class="mx-auto max-w-3xl px-4 py-10">
   <h1 class="text-3xl font-extrabold text-slate-900">${esc(h1)}</h1>
   ${date ? `<p class="mt-2 text-sm text-slate-500">Effective date: ${esc(date)}</p>` : ''}
   ${intro ? `<p class="mt-4 text-sm leading-6 text-slate-600">${esc(intro)}</p>` : ''}
   ${sections.map((title) => `<h2 class="mt-8 text-lg font-bold text-slate-900">${esc(title)}</h2>`).join('\n  ')}
-  <p class="mt-8 text-sm"><a class="font-semibold text-primary hover:underline" href="/">Back to Call2Now</a></p>
+  <p class="mt-8 text-sm"><a class="font-semibold text-primary hover:underline" href="/">${esc(t('Back to Call2Now'))}</a></p>
 </main>`;
 }
 
 function notFoundBody() {
   return `
-<a class="c2n-shell-nav" href="/"><img src="/logo.png" alt="Call2Now" class="h-8 w-auto" /></a>
+<a class="c2n-shell-nav" href="/"><img src="/logo.png" alt="${esc(t('Call2Now home'))}" class="h-8 w-auto" /></a>
 <main class="mx-auto max-w-xl px-4 py-24 text-center">
-  <h1 class="text-2xl font-extrabold text-slate-900">Page not found</h1>
-  <p class="mt-2 text-sm text-slate-500">The page you are looking for was moved, removed or never existed.</p>
+  <h1 class="text-2xl font-extrabold text-slate-900">${esc(t('Page not found'))}</h1>
+  <p class="mt-2 text-sm text-slate-500">${esc(t('The page you are looking for was moved, removed or never existed. Let us get you back to discovering businesses near you.'))}</p>
   <p class="mt-6 flex justify-center gap-4 text-sm">
-    <a class="font-semibold text-primary hover:underline" href="/">Go to home page</a>
-    <a class="font-semibold text-primary hover:underline" href="/search">Browse all businesses</a>
+    <a class="font-semibold text-primary hover:underline" href="/">${esc(t('Go to home page'))}</a>
+    <a class="font-semibold text-primary hover:underline" href="/search">${esc(t('Browse all businesses'))}</a>
   </p>
 </main>`;
 }
@@ -289,15 +301,15 @@ const STANDALONE_SCREENS = new Set(['/login', '/signup']);
 
 function screenBody(label, description, withNav = true) {
   const logo = withNav
-    ? '<a class="c2n-shell-nav" href="/"><img src="/logo.png" alt="Call2Now" class="h-8 w-auto" /></a>'
-    : '<a class="inline-block" href="/"><img src="/logo.png" alt="Call2Now" class="h-8 w-auto" /></a>';
+    ? `<a class="c2n-shell-nav" href="/"><img src="/logo.png" alt="${esc(t('Call2Now home'))}" class="h-8 w-auto" /></a>`
+    : `<a class="inline-block" href="/"><img src="/logo.png" alt="${esc(t('Call2Now home'))}" class="h-8 w-auto" /></a>`;
   return `
 ${logo}
 <main class="mx-auto max-w-xl px-4 py-24 text-center">
-  <h1 class="text-2xl font-extrabold text-slate-900">${esc(label)}</h1>
-  <p class="mt-2 text-sm text-slate-500">${esc(description)}</p>
-  <noscript><p class="mt-4 text-sm text-slate-500">This screen needs JavaScript to continue.</p></noscript>
-  <p class="mt-6 text-sm"><a class="font-semibold text-primary hover:underline" href="/">Back to Call2Now</a></p>
+  <h1 class="text-2xl font-extrabold text-slate-900">${esc(t(label))}</h1>
+  <p class="mt-2 text-sm text-slate-500">${esc(t(description))}</p>
+  <noscript><p class="mt-4 text-sm text-slate-500">${esc(t('This screen needs JavaScript to continue.'))}</p></noscript>
+  <p class="mt-6 text-sm"><a class="font-semibold text-primary hover:underline" href="/">${esc(t('Back to Call2Now'))}</a></p>
 </main>`;
 }
 

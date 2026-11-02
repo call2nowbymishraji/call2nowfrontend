@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import ProfileCard from './ProfileCard.jsx';
+import { useLang } from '../context/LangContext.jsx';
 
 const GAP = 20;
 const STEP_MS = 2500;
@@ -11,6 +12,7 @@ function visibleFor(w) {
 }
 
 export default function SuggestedCarousel({ profiles }) {
+  const { t } = useLang();
   const [visible, setVisible] = useState(() => visibleFor(window.innerWidth));
   const [index, setIndex] = useState(0);
   const [animate, setAnimate] = useState(true);
@@ -23,7 +25,9 @@ export default function SuggestedCarousel({ profiles }) {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const items = useMemo(() => profiles.concat(profiles.slice(0, visible)), [profiles, visible]);
+  // The clones only exist so the track can slide seamlessly, so a single profile (what one
+  // country view can leave after the location filter) is not repeated next to itself.
+  const items = useMemo(() => (profiles.length > 1 ? profiles.concat(profiles.slice(0, visible)) : profiles), [profiles, visible]);
 
   useEffect(() => {
     if (index > profiles.length) setIndex(0);
@@ -99,7 +103,7 @@ export default function SuggestedCarousel({ profiles }) {
               setIndex((i) => (i - 1 + profiles.length) % profiles.length);
             }}
             className="absolute -left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white text-slate-700 shadow-card hover:text-primary"
-            aria-label="Previous profiles"
+            aria-label={t('Previous profiles')}
           >
             ‹
           </button>
@@ -109,7 +113,7 @@ export default function SuggestedCarousel({ profiles }) {
               setIndex((i) => (i + 1) % profiles.length);
             }}
             className="absolute -right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-white text-slate-700 shadow-card hover:text-primary"
-            aria-label="Next profiles"
+            aria-label={t('Next profiles')}
           >
             ›
           </button>
@@ -122,7 +126,7 @@ export default function SuggestedCarousel({ profiles }) {
                   setIndex(i);
                 }}
                 className={`h-2 rounded-full transition-all ${i === index % profiles.length ? 'w-6 bg-primary' : 'w-2 bg-slate-300'}`}
-                aria-label={`Go to profile ${i + 1}`}
+                aria-label={t('Go to profile {n}', { n: i + 1 })}
               />
             ))}
           </div>

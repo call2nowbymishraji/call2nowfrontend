@@ -4,8 +4,10 @@ import { profileLocality } from '../utils/geo.js';
 import { callLink, waLink, mapsLink } from '../utils/contact.js';
 import { assetUrl } from '../services/api.js';
 import { profilePath } from '../seo/site.js';
+import { useLang } from '../context/LangContext.jsx';
 
 export default function ProfileCard({ profile }) {
+  const { t } = useLang();
   const p = paletteFor(profile.category || profile.shopName);
   const img = assetUrl(profile.shopImage, 640);
   const place = profile.city ? [profile.city, profile.state].filter(Boolean).join(', ') : profileLocality(profile);
@@ -21,14 +23,14 @@ export default function ProfileCard({ profile }) {
       <div className="card pc-body relative h-full overflow-hidden bg-white transition hover:-translate-y-1 hover:shadow-lg">
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Stretched link: the ::after blankets the card so any click except the z-[2] contact buttons opens the profile. */}
-          <Link to={href} aria-label={`Open ${profile.shopName}`} className="after:absolute after:inset-0 after:z-[1] after:content-['']">
+          <Link to={href} aria-label={t('Open {name}', { name: profile.shopName })} className="after:absolute after:inset-0 after:z-[1] after:content-['']">
             <h3 className="pc-name truncate font-extrabold tracking-tight text-slate-900">{profile.shopName}</h3>
           </Link>
 
           {category && (
             <p className="pc-meta pc-meta-1 font-semibold text-slate-500">
               <TagIcon className="pc-meta-icon" />
-              <span className="truncate">{category}</span>
+              <span className="truncate">{t(category)}</span>
             </p>
           )}
 
@@ -56,11 +58,11 @@ export default function ProfileCard({ profile }) {
               <a
                 href={tel}
                 className="pc-btn pc-btn-stack relative z-[2] bg-primary text-white transition hover:bg-primary/90"
-                aria-label={`Call ${profile.shopName}`}
-                title={`Call ${profile.shopName}`}
+                aria-label={t('Call {name}', { name: profile.shopName })}
+                title={t('Call {name}', { name: profile.shopName })}
               >
                 <PhoneIcon className="pc-btn-icon" />
-                <span className="pc-btn-label">Call</span>
+                <span className="pc-btn-label">{t('Call')}</span>
               </a>
             )}
             {wa && (
@@ -69,11 +71,11 @@ export default function ProfileCard({ profile }) {
                 target="_blank"
                 rel="noreferrer"
                 className="pc-btn pc-btn-stack relative z-[2] bg-ggreen text-white transition hover:brightness-110"
-                aria-label={`WhatsApp ${profile.shopName}`}
-                title={`WhatsApp ${profile.shopName}`}
+                aria-label={t('Message {name} on WhatsApp', { name: profile.shopName })}
+                title={t('Message {name} on WhatsApp', { name: profile.shopName })}
               >
                 <WhatsAppIcon className="pc-btn-icon" />
-                <span className="pc-btn-label">WhatsApp</span>
+                <span className="pc-btn-label">{t('WhatsApp')}</span>
               </a>
             )}
             {maps && (
@@ -81,11 +83,11 @@ export default function ProfileCard({ profile }) {
                 href={maps}
                 target="_blank"
                 rel="noreferrer"
-                aria-label={`Get directions to ${profile.shopName}`}
+                aria-label={t('Get directions to {name}', { name: profile.shopName })}
                 className={`pc-btn pc-btn-grow relative z-[2] border transition hover:brightness-95 ${p.soft}`}
               >
                 <PinIcon className="pc-btn-icon" />
-                <span className="pc-btn-label">Visit for best price</span>
+                <span className="pc-btn-label">{t('Visit for best price')}</span>
               </a>
             )}
           </div>

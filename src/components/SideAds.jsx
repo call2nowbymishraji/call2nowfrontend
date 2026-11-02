@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import searchService from '../services/searchService.js';
 import { assetUrl } from '../services/api.js';
 import { pickRandom } from './AdPopup.jsx';
+import { useLang } from '../context/LangContext.jsx';
 
 const dismissed = (id) => sessionStorage.getItem(`c2n_ad_dismissed_${id}`) === '1';
 const dismiss = (id) => sessionStorage.setItem(`c2n_ad_dismissed_${id}`, '1');
 
 export default function SideAdRail({ side }) {
+  const { t } = useLang();
   const [ad, setAd] = useState(null);
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function SideAdRail({ side }) {
           setAd(null);
         }}
         className="absolute right-1.5 top-1.5 z-10 grid h-7 w-7 place-items-center rounded-full bg-slate-800/90 text-sm font-bold text-white hover:bg-slate-600"
-        aria-label="Close ad"
+        aria-label={t('Close ad')}
       >
         ×
       </button>

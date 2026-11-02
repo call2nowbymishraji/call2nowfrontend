@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../utils/categories.js';
 import categoryService from '../services/categoryService.js';
 import geoService from '../services/geoService.js';
+import { useLang } from '../context/LangContext.jsx';
 
 export default function SearchBar({ initial = {}, compact = false }) {
+  const { t } = useLang();
   const [q, setQ] = useState(initial.q || '');
   const [category, setCategory] = useState(initial.category || '');
   const [location, setLocation] = useState(initial.location || '');
@@ -50,7 +52,7 @@ export default function SearchBar({ initial = {}, compact = false }) {
   const startVoice = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-      alert('Voice search is not supported in this browser.');
+      alert(t('Voice search is not supported in this browser.'));
       return;
     }
     const rec = new SR();
@@ -82,15 +84,15 @@ export default function SearchBar({ initial = {}, compact = false }) {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search anything... (business, product, name)"
-          aria-label="Search businesses by name, product or category"
+          placeholder={t('Search anything... (business, product, name)')}
+          aria-label={t('Search businesses by name, product or category')}
           className="w-full bg-transparent text-base outline-none placeholder:text-slate-400"
         />
         <button
           type="button"
           onClick={startVoice}
-          title="Search by voice"
-          aria-label="Search by voice"
+          title={t('Search by voice')}
+          aria-label={t('Search by voice')}
           className={`rounded-full p-2 transition ${listening ? 'bg-gred text-white animate-pulse' : 'text-slate-400 hover:bg-slate-100 hover:text-primary'}`}
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -103,7 +105,7 @@ export default function SearchBar({ initial = {}, compact = false }) {
         </button>
         <button
           type="submit"
-          aria-label="Search"
+          aria-label={t('Search')}
           className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary text-white transition hover:bg-blue-700"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -117,14 +119,14 @@ export default function SearchBar({ initial = {}, compact = false }) {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              aria-label="Business category"
+              aria-label={t('Business category')}
               className="input !rounded-full !py-2.5 text-sm"
             >
-              <option value="">All categories</option>
-              {category && !cats.includes(category) && <option value={category}>{category}</option>}
+              <option value="">{t('All categories')}</option>
+              {category && !cats.includes(category) && <option value={category}>{t(category)}</option>}
               {cats.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {t(c)}
                 </option>
               ))}
             </select>
@@ -135,8 +137,8 @@ export default function SearchBar({ initial = {}, compact = false }) {
               onChange={(e) => setLocation(e.target.value)}
               onFocus={openLocation}
               onBlur={() => setLocOpen(false)}
-              placeholder="Location (city / area / pin code)"
-              aria-label="Location, city, area or pin code"
+              placeholder={t('Location (city / area / pin code)')}
+              aria-label={t('Location, city, area or pin code')}
               className="input !rounded-full !py-2.5 text-sm"
             />
             {locOpen && locSuggestions.length > 0 && (
@@ -159,7 +161,7 @@ export default function SearchBar({ initial = {}, compact = false }) {
             )}
           </div>
           <button type="submit" className="btn-primary !py-2.5 text-sm">
-            Search
+            {t('Search')}
           </button>
         </div>
       )}

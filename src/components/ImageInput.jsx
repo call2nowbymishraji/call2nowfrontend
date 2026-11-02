@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { assetUrl } from '../services/api.js';
+import { useLang } from '../context/LangContext.jsx';
 import ImageCropper from './ImageCropper.jsx';
 
 const SHAPES = {
@@ -21,6 +22,7 @@ export default function ImageInput({
   cropAspect = null,
   cropRadius = 'rounded-xl',
 }) {
+  const { t } = useLang();
   const ref = useRef(null);
   const [pending, setPending] = useState(null);
   const show = value instanceof File ? URL.createObjectURL(value) : assetUrl(preview || value);
@@ -51,7 +53,7 @@ export default function ImageInput({
           <>
             <img src={show} alt={label} className="h-full w-full object-cover" />
             <span className="absolute inset-0 grid place-items-center bg-black/50 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100">
-              Change
+              {t('Change')}
             </span>
           </>
         ) : (

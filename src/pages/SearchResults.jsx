@@ -7,6 +7,8 @@ import ProfileCard from '../components/ProfileCard.jsx';
 import SideAdRail from '../components/SideAds.jsx';
 import LoadingOverlay, { CardSkeleton } from '../components/LoadingOverlay.jsx';
 import searchService from '../services/searchService.js';
+import { useRegion } from '../context/RegionContext.jsx';
+import { useLang } from '../context/LangContext.jsx';
 import Seo from '../seo/Seo.jsx';
 import { SEARCH_HEADING, searchSeo } from '../seo/pages.js';
 
@@ -17,15 +19,17 @@ export default function SearchResults() {
   const location = params.get('location') || '';
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { country } = useRegion();
+  const { t } = useLang();
 
   useEffect(() => {
     setLoading(true);
     searchService
-      .search({ q, category, location })
+      .search({ q, category, location, country })
       .then((d) => setResults(d.profiles || []))
       .catch(() => setResults([]))
       .finally(() => setLoading(false));
-  }, [q, category, location]);
+  }, [q, category, location, country]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -54,7 +58,7 @@ export default function SearchResults() {
                 </div>
               ) : (
                 <p className="card p-10 text-center text-sm text-slate-400">
-                  No businesses match your search. Try different keywords or category.
+                  {t('No businesses match your search. Try different keywords or category.')}
                 </p>
               )}
             </div>

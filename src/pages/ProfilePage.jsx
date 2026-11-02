@@ -7,6 +7,7 @@ import SideAdRail from '../components/SideAds.jsx';
 import LoadingOverlay from '../components/LoadingOverlay.jsx';
 import profileService from '../services/profileService.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useLang } from '../context/LangContext.jsx';
 import { paletteFor } from '../utils/categories.js';
 import { formatAddress } from '../utils/geo.js';
 import { callLink, waLink, mapsLink } from '../utils/contact.js';
@@ -27,6 +28,7 @@ function ownerSeo(profile) {
 export default function ProfilePage({ ownerMode = false }) {
   const { slug } = useParams();
   const { user } = useAuth();
+  const { t } = useLang();
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -60,11 +62,11 @@ export default function ProfilePage({ ownerMode = false }) {
         <Seo {...(ownerMode ? ownerSeo(null) : missingProfileSeo(slug))} />
         <Navbar />
         <div className="mx-auto max-w-md px-4 py-24 text-center">
-          <h1 className="text-xl font-bold text-slate-800">{ownerMode ? 'You have no profile yet' : 'Profile not found'}</h1>
-          <p className="mt-2 text-sm text-slate-500">{error || 'This business page does not exist.'}</p>
+          <h1 className="text-xl font-bold text-slate-800">{ownerMode ? t('You have no profile yet') : t('Profile not found')}</h1>
+          <p className="mt-2 text-sm text-slate-500">{error || t('This business page does not exist.')}</p>
           {ownerMode && user?.role !== 'admin' && (
             <Link to="/create-profile" className="btn-primary mt-6">
-              Create your profile
+              {t('Create your profile')}
             </Link>
           )}
         </div>
@@ -94,24 +96,24 @@ export default function ProfilePage({ ownerMode = false }) {
                 className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-primary hover:text-primary"
               >
                 <ChevronLeftIcon />
-                Back to home
+                {t('Back to home')}
               </Link>
             </div>
             {isOwner && !profile.verified && (
               <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-gyellow/50 bg-gyellow/10 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm font-semibold text-slate-700">
-                  Your profile is not verified yet. To verify your profile, WhatsApp us and our team will activate it.
+                  {t('Your profile is not verified yet. To verify your profile, WhatsApp us and our team will activate it.')}
                 </p>
                 <a
                   href={`https://wa.me/919305035828?text=${encodeURIComponent(
-                    `Hi Call2Now, please verify my business profile: ${window.location.href}`
+                    t('Hi Call2Now, please verify my business profile: {url}', { url: window.location.href })
                   )}`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-ggreen px-4 py-2.5 text-sm font-bold text-white shadow-card transition hover:brightness-110"
                 >
                   <WhatsAppIcon />
-                  WhatsApp us
+                  {t('WhatsApp us')}
                 </a>
               </div>
             )}
@@ -120,9 +122,9 @@ export default function ProfilePage({ ownerMode = false }) {
               {gallery.length > 0 && (
                 <div className="p-6 sm:p-10">
                   <div className="mb-5 flex items-center justify-between">
-                    <h2 className="section-title">Gallery ({gallery.length})</h2>
+                    <h2 className="section-title">{t('Gallery ({count})', { count: gallery.length })}</h2>
                     <button onClick={() => setModal('gallery')} className="text-sm font-semibold text-primary hover:underline">
-                      See all
+                      {t('See all')}
                     </button>
                   </div>
                   <RotatingRow
@@ -158,16 +160,16 @@ export default function ProfilePage({ ownerMode = false }) {
                 {profile.shopName}
                 {profile.verified && (
                   <span
-                    title="Verified by Call2Now"
+                    title={t('Verified by Call2Now')}
                     className="inline-flex items-center gap-1.5 rounded-full bg-ggreen/10 px-3 py-1 text-xs font-bold text-ggreen"
                   >
                     <VerifiedTick />
-                    Verified
+                    {t('Verified')}
                   </span>
                 )}
               </h1>
               <p className="mt-2 text-sm text-slate-500">
-                <span className={`chip ${p.chip}`}>{profile.category === 'Other' ? profile.customCategory : profile.category}</span>
+                <span className={`chip ${p.chip}`}>{t(profile.category === 'Other' ? profile.customCategory : profile.category)}</span>
                 <span className="ml-2">{formatAddress(profile)}</span>
               </p>
 
@@ -178,7 +180,7 @@ export default function ProfilePage({ ownerMode = false }) {
                     className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 sm:px-5 sm:py-3 text-sm font-bold text-white shadow-card transition hover:bg-primary/90"
                   >
                     <PhoneIcon />
-                    Call now
+                    {t('Call now')}
                   </a>
                 )}
                 {wa && (
@@ -189,7 +191,7 @@ export default function ProfilePage({ ownerMode = false }) {
                     className="inline-flex items-center gap-2 rounded-xl border border-ggreen/30 bg-ggreen/5 px-4 py-2.5 sm:px-5 sm:py-3 text-sm font-bold text-ggreen transition hover:bg-ggreen/10"
                   >
                     <WhatsAppIcon />
-                    WhatsApp
+                    {t('WhatsApp')}
                   </a>
                 )}
                 <a
@@ -197,7 +199,7 @@ export default function ProfilePage({ ownerMode = false }) {
                   className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 sm:px-5 sm:py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-primary hover:text-primary"
                 >
                   <MailIcon />
-                  Email
+                  {t('Email')}
                 </a>
                 {maps && (
                   <a
@@ -207,7 +209,7 @@ export default function ProfilePage({ ownerMode = false }) {
                     className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 sm:px-5 sm:py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-primary hover:text-primary"
                   >
                     <DirectionsIcon />
-                    Get directions
+                    {t('Get directions')}
                   </a>
                 )}
                 {SOCIAL_BUTTONS.filter((s) => profile[s.key]).map((s) => (
@@ -219,7 +221,7 @@ export default function ProfilePage({ ownerMode = false }) {
                     className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 sm:px-5 sm:py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-primary hover:text-primary"
                   >
                     <s.Icon />
-                    {s.label}
+                    {t(s.label)}
                   </a>
                 ))}
               </div>
@@ -227,30 +229,34 @@ export default function ProfilePage({ ownerMode = false }) {
               {isOwner && (
                 <div className="mt-4">
                   <Link to="/create-profile?edit=1" className="btn-outline !py-2 text-sm">
-                    Edit profile
+                    {t('Edit profile')}
                   </Link>
                 </div>
               )}
 
               {profile.description && (
                 <div className="mt-7">
-                  <h2 className="section-title">About</h2>
+                  <h2 className="section-title">{t('About')}</h2>
                   <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-600">{profile.description}</p>
                 </div>
               )}
 
               <div className="mt-7 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                <InfoCell label="Owner" value={profile.ownerName} />
-                <InfoCell label="Phone" value={profile.phone} />
-                <InfoCell label="WhatsApp" value={profile.whatsapp} />
-                <InfoCell label="Email" value={profile.email} />
-                <InfoCell label="In market since" value={profile.inMarketSince} />
-                <InfoCell label="Operation days" value={profile.operationDays?.join(', ') || ''} />
+                <InfoCell label={t('Owner')} value={profile.ownerName} />
+                <InfoCell label={t('Phone')} value={profile.phone} />
+                <InfoCell label={t('WhatsApp')} value={profile.whatsapp} />
+                <InfoCell label={t('Email')} value={profile.email} />
+                <InfoCell label={t('In market since')} value={profile.inMarketSince} />
+                <InfoCell label={t('Operation days')} value={profile.operationDays?.map((d) => t(d)).join(', ') || ''} />
                 <InfoCell
-                  label="Timing"
-                  value={profile.operationOpen && profile.operationClose ? `${profile.operationOpen} to ${profile.operationClose}` : ''}
+                  label={t('Timing')}
+                  value={
+                    profile.operationOpen && profile.operationClose
+                      ? t('{open} to {close}', { open: profile.operationOpen, close: profile.operationClose })
+                      : ''
+                  }
                 />
-                {profile.gst && <InfoCell label="GST" value={profile.gst} />}
+                {profile.gst && <InfoCell label={t('GST')} value={profile.gst} />}
                 <PageUrlCell url={absoluteUrl(profilePath(profile.pageSlug))} shopName={profile.shopName} />
               </div>
 
@@ -265,9 +271,9 @@ export default function ProfilePage({ ownerMode = false }) {
           {products.length > 0 && (
             <div className="p-6 sm:p-10">
               <div className="mb-5 flex items-center justify-between">
-                <h2 className="section-title">Products ({products.length})</h2>
+                <h2 className="section-title">{t('Products ({count})', { count: products.length })}</h2>
                 <button onClick={() => setModal('products')} className="text-sm font-semibold text-primary hover:underline">
-                  See all
+                  {t('See all')}
                 </button>
               </div>
               <RotatingRow items={products} target={4} aspect="" render={(pr) => <ProductTile pr={pr} />} />
@@ -280,7 +286,7 @@ export default function ProfilePage({ ownerMode = false }) {
       </div>
 
       {modal === 'products' && (
-        <SeeAllModal title={`All products (${products.length})`} onClose={() => setModal(null)}>
+        <SeeAllModal title={t('All products ({count})', { count: products.length })} onClose={() => setModal(null)}>
           <div className="grid gap-4 sm:grid-cols-2">
             {products.map((pr) => (
               <ProductTile key={pr._id} pr={pr} />
@@ -289,7 +295,7 @@ export default function ProfilePage({ ownerMode = false }) {
         </SeeAllModal>
       )}
       {modal === 'gallery' && (
-        <SeeAllModal title={`All photos (${gallery.length})`} onClose={() => setModal(null)}>
+        <SeeAllModal title={t('All photos ({count})', { count: gallery.length })} onClose={() => setModal(null)}>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {gallery.map((g, i) => (
               <img key={i} src={assetUrl(g, 480)} alt={`${profile.shopName} ${i + 1}`} loading="lazy" decoding="async" className="aspect-[3/4] w-full rounded-xl object-cover" />
@@ -304,6 +310,7 @@ export default function ProfilePage({ ownerMode = false }) {
 }
 
 function ProductTile({ pr }) {
+  const { t } = useLang();
   const img = assetUrl(pr.image, 400);
   const off = pr.price && pr.discountedPrice ? Math.round(((pr.price - pr.discountedPrice) / pr.price) * 100) : 0;
   return (
@@ -312,7 +319,7 @@ function ProductTile({ pr }) {
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-bold text-slate-800">{pr.name}</h3>
-          {off > 0 && <span className="chip bg-ggreen/10 text-ggreen">{off}% off</span>}
+          {off > 0 && <span className="chip bg-ggreen/10 text-ggreen">{t('{off}% off', { off })}</span>}
         </div>
         <p className="mt-1 text-sm">
           {pr.discountedPrice != null && <span className="font-bold text-slate-900">₹{pr.discountedPrice} </span>}
@@ -329,19 +336,21 @@ function ProductTile({ pr }) {
 }
 
 function InfoCell({ label, value }) {
+  const { t } = useLang();
   return (
     <div className="border-b border-slate-100 pb-2">
       <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</span>
-      <p className="mt-0.5 text-sm font-semibold text-slate-700">{value || 'Not set'}</p>
+      <p className="mt-0.5 text-sm font-semibold text-slate-700">{value || t('Not set')}</p>
     </div>
   );
 }
 
 function DeliveryBadges({ profile }) {
+  const { t } = useLang();
   return (
     <>
-      <Badge on={profile.onlineDelivery} yes="Online delivery available" no="No online delivery" />
-      <Badge on={profile.panIndia} yes="Delivery pan India" no="Local delivery only" />
+      <Badge on={profile.onlineDelivery} yes={t('Online delivery available')} no={t('No online delivery')} />
+      <Badge on={profile.panIndia} yes={t('Delivery pan India')} no={t('Local delivery only')} />
     </>
   );
 }
@@ -365,6 +374,7 @@ function legacyCopy(text) {
 }
 
 function PageUrlCell({ url, shopName }) {
+  const { t } = useLang();
   const [copied, setCopied] = useState(false);
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
@@ -383,11 +393,11 @@ function PageUrlCell({ url, shopName }) {
 
   function share() {
     if (canShare) {
-      navigator.share({ title: shopName, text: `${shopName} on Call2Now`, url }).catch(() => {});
+      navigator.share({ title: shopName, text: t('{shopName} on Call2Now', { shopName }), url }).catch(() => {});
       return;
     }
     // Browsers without the share API (desktop Electron, older Safari) still get a sheet.
-    window.open(`https://wa.me/?text=${encodeURIComponent(`${shopName} on Call2Now: ${url}`)}`, '_blank', 'noopener');
+    window.open(`https://wa.me/?text=${encodeURIComponent(t('{shopName} on Call2Now: {url}', { shopName, url }))}`, '_blank', 'noopener');
   }
 
   const action =
@@ -395,19 +405,19 @@ function PageUrlCell({ url, shopName }) {
 
   return (
     <div className="border-b border-slate-100 pb-2 sm:col-span-2">
-      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Page URL</span>
+      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('Page URL')}</span>
       <div className="mt-1 flex flex-wrap items-center gap-2">
         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-700" title={url}>
           {url.replace(/^https?:\/\//, '')}
         </span>
         <div className="flex shrink-0 items-center gap-2">
-          <button type="button" onClick={copy} className={action} aria-label="Copy page URL">
+          <button type="button" onClick={copy} className={action} aria-label={t('Copy page URL')}>
             {copied ? <CheckIcon /> : <CopyIcon />}
-            {copied ? 'Copied' : 'Copy'}
+            {copied ? t('Copied') : t('Copy')}
           </button>
-          <button type="button" onClick={share} className={action} aria-label="Share page URL" title={canShare ? 'Share this page' : 'Share this page on WhatsApp'}>
+          <button type="button" onClick={share} className={action} aria-label={t('Share page URL')} title={canShare ? t('Share this page') : t('Share this page on WhatsApp')}>
             <ShareIcon />
-            Share
+            {t('Share')}
           </button>
         </div>
       </div>
@@ -416,6 +426,7 @@ function PageUrlCell({ url, shopName }) {
 }
 
 function SeeAllModal({ title, onClose, children }) {
+  const { t } = useLang();
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={onClose}>
       <div
@@ -427,7 +438,7 @@ function SeeAllModal({ title, onClose, children }) {
           <button
             onClick={onClose}
             className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"
-            aria-label="Close"
+            aria-label={t('Close')}
           >
             ×
           </button>

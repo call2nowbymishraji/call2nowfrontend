@@ -1,4 +1,7 @@
+import { useLang } from '../context/LangContext.jsx';
+
 export default function ModeTabs({ value, onChange, options }) {
+  const { t } = useLang();
   return (
     <div className="grid grid-cols-2 gap-1 rounded-full bg-slate-100 p-1" role="tablist">
       {options.map((o) => (
@@ -12,7 +15,7 @@ export default function ModeTabs({ value, onChange, options }) {
             value === o.id ? 'bg-white text-primary shadow-pill' : 'text-slate-500 hover:text-slate-700'
           }`}
         >
-          {o.label}
+          {t(o.label)}
         </button>
       ))}
     </div>

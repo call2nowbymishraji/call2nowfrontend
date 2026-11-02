@@ -1,3 +1,5 @@
+import { useLang } from '../context/LangContext.jsx';
+
 // The backend can take a few seconds to answer (a cold Render container), which used to leave
 // the home page showing an empty-state card that read as a broken site. The veil states that
 // wait out loud over the page's own skeleton.
@@ -5,6 +7,7 @@
 // It is deliberately pointer-events-none: the veil only paints, so the navbar and search bar
 // stay usable while a request is in flight instead of trapping the visitor behind a spinner.
 export default function LoadingOverlay({ label = 'Loading...' }) {
+  const { t } = useLang();
   return (
     <div
       role="status"
@@ -13,7 +16,7 @@ export default function LoadingOverlay({ label = 'Loading...' }) {
     >
       <div className="flex items-center gap-2.5 rounded-full bg-white px-5 py-2.5 shadow-card">
         <span className="h-6 w-6 shrink-0 animate-spin rounded-full border-[3px] border-blue-200 border-t-primary" />
-        <span className="text-sm font-semibold text-slate-600">{label}</span>
+        <span className="text-sm font-semibold text-slate-600">{t(label)}</span>
       </div>
     </div>
   );

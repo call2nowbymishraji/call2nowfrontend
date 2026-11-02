@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLang } from '../context/LangContext.jsx';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 let initDone = false;
@@ -8,6 +9,7 @@ export default function GoogleButton({ onCredential }) {
   const [devOpen, setDevOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const { t } = useLang();
   activeCb = onCredential;
 
   useEffect(() => {
@@ -49,21 +51,21 @@ export default function GoogleButton({ onCredential }) {
           <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
           <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
         </svg>
-        Continue with Google
+        {t('Continue with Google')}
       </button>
       {devOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 px-4" role="dialog" aria-modal="true">
           <div className="card w-full max-w-sm p-6">
-            <h3 className="text-lg font-bold text-slate-800">Dev mode: Google login</h3>
+            <h3 className="text-lg font-bold text-slate-800">{t('Dev mode: Google login')}</h3>
             <p className="mt-1 text-xs text-slate-500">
-              No VITE_GOOGLE_CLIENT_ID configured, so simulate the Google account that would be returned.
+              {t('No VITE_GOOGLE_CLIENT_ID configured, so simulate the Google account that would be returned.')}
             </p>
-            <input aria-label="Google name" className="input mt-4" placeholder="Google name" value={name} onChange={(e) => setName(e.target.value)} />
+            <input aria-label={t('Google name')} className="input mt-4" placeholder={t('Google name')} value={name} onChange={(e) => setName(e.target.value)} />
             <input
-              aria-label="Google email"
+              aria-label={t('Google email')}
               className="input mt-2"
               type="email"
-              placeholder="Google email"
+              placeholder={t('Google email')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -77,10 +79,10 @@ export default function GoogleButton({ onCredential }) {
                   onCredential({ email: email.trim(), name: name.trim() || email.split('@')[0] });
                 }}
               >
-                Continue
+                {t('Continue')}
               </button>
               <button type="button" className="btn-outline flex-1 !py-2.5 text-sm" onClick={() => setDevOpen(false)}>
-                Cancel
+                {t('Cancel')}
               </button>
             </div>
           </div>

@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useLang } from '../context/LangContext.jsx';
 
 export default function Logo({ className = 'h-9 w-auto', to = '/' }) {
+  const { t } = useLang();
   return (
-    <Link to={to} className="inline-block shrink-0" aria-label="Call2Now home">
+    <Link to={to} className="inline-block shrink-0" aria-label={t('Call2Now home')}>
       <img src="/logo.png" alt="call2now" className={className} />
     </Link>
   );

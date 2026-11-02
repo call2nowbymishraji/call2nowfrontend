@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo.jsx';
+import ViewPickers from '../components/ViewPickers.jsx';
 import OtpModal from '../components/OtpModal.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import ModeTabs from '../components/ModeTabs.jsx';
 import DobSelects from '../components/DobSelects.jsx';
 import authService from '../services/authService.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useLang } from '../context/LangContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { errMsg } from '../services/api.js';
 import Seo from '../seo/Seo.jsx';
@@ -23,6 +25,7 @@ export default function Signup() {
   const [busy, setBusy] = useState(false);
   const [otp, setOtp] = useState(null); // { email, devCode }
   const { startSession, googleLogin } = useAuth();
+  const { t } = useLang();
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -32,9 +35,9 @@ export default function Signup() {
 
   const validate = () => {
     const e = {};
-    if (form.name.trim().length < 2) e.name = 'Name is required';
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) e.email = 'Valid email is required';
-    if (form.password.length < 6) e.password = 'Minimum 6 characters';
+    if (form.name.trim().length < 2) e.name = t('Name is required');
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) e.email = t('Valid email is required');
+    if (form.password.length < 6) e.password = t('Minimum 6 characters');
     setErrors(e);
     return !Object.keys(e).length;
   };
@@ -46,7 +49,7 @@ export default function Signup() {
     try {
       const res = await authService.signup(form);
       setOtp({ email: form.email, devCode: res.devCode });
-      toast('OTP sent to your email', 'info');
+      toast(t('OTP sent to your email'), 'info');
     } catch (e) {
       toast(errMsg(e), 'error');
     } finally {
@@ -56,11 +59,11 @@ export default function Signup() {
 
   const validatePhone = () => {
     const e = {};
-    if (phoneForm.name.trim().length < 2) e.name = 'Name is required';
-    if (phoneForm.phone.length !== 10) e.phone = '10-digit mobile number required';
-    if (phoneForm.password.length < 6) e.password = 'Minimum 6 characters';
+    if (phoneForm.name.trim().length < 2) e.name = t('Name is required');
+    if (phoneForm.phone.length !== 10) e.phone = t('10-digit mobile number required');
+    if (phoneForm.password.length < 6) e.password = t('Minimum 6 characters');
     const { day, month, year } = phoneForm.dob;
-    if (!day || !month || !year) e.dob = 'Select day, month and year';
+    if (!day || !month || !year) e.dob = t('Select day, month and year');
     setErrors(e);
     return !Object.keys(e).length;
   };
@@ -73,7 +76,7 @@ export default function Signup() {
       const { name, phone, password, dob } = phoneForm;
       const data = await authService.signupPhone({ name, phone, password, dob });
       startSession(data);
-      toast('Account created! Now create your business profile.');
+      toast(t('Account created! Now create your business profile.'));
       navigate(data.hasProfile ? '/profile' : '/create-profile');
     } catch (e) {
       toast(errMsg(e), 'error');
@@ -85,14 +88,14 @@ export default function Signup() {
   const verify = async (code) => {
     const data = await authService.verifySignup({ email: form.email, code });
     startSession(data);
-    toast('Account verified! Now create your business profile.');
+    toast(t('Account verified! Now create your business profile.'));
     navigate('/create-profile');
   };
 
   const onGoogle = async (payload) => {
     try {
       const data = await googleLogin(payload);
-      toast(`Welcome, ${data.user.name}`);
+      toast(t('Welcome, {name}', { name: data.user.name }));
       navigate(data.hasProfile ? '/profile' : '/create-profile');
     } catch (e) {
       toast(errMsg(e), 'error');
@@ -110,8 +113,11 @@ export default function Signup() {
       <div className="card w-full max-w-md p-8">
         <div className="text-center">
           <Logo to="/" className="mx-auto h-12 w-auto" />
-          <h1 className="mt-4 text-2xl font-extrabold text-slate-900">Sign Up</h1>
-          <p className="mt-1 text-sm text-slate-500">Create your account to register your business</p>
+          <div className="mt-3 flex justify-center">
+            <ViewPickers showLocation={false} />
+          </div>
+          <h1 className="mt-4 text-2xl font-extrabold text-slate-900">{t('Sign Up')}</h1>
+          <p className="mt-1 text-sm text-slate-500">{t('Create your account to register your business')}</p>
         </div>
         <div className="mt-6">
           <ModeTabs
@@ -127,19 +133,19 @@ export default function Signup() {
         {mode === 'email' ? (
           <form onSubmit={submit} className="mt-6 space-y-4" noValidate>
             <div>
-              <input aria-label="Your name" className="input" placeholder="Name" value={form.name} onChange={set('name')} />
+              <input aria-label={t('Your name')} className="input" placeholder={t('Name')} value={form.name} onChange={set('name')} />
               {errors.name && <p className="err">{errors.name}</p>}
             </div>
             <div>
-              <input aria-label="Email address" className="input" type="email" placeholder="Email Address" value={form.email} onChange={set('email')} />
+              <input aria-label={t('Email address')} className="input" type="email" placeholder={t('Email Address')} value={form.email} onChange={set('email')} />
               {errors.email && <p className="err">{errors.email}</p>}
             </div>
             <div className="relative">
               <input
-                aria-label="Password"
+                aria-label={t('Password')}
                 className="input pr-12"
                 type={showPass ? 'text' : 'password'}
-                placeholder="Password"
+                placeholder={t('Password')}
                 value={form.password}
                 onChange={set('password')}
               />
@@ -147,29 +153,29 @@ export default function Signup() {
                 type="button"
                 onClick={() => setShowPass((s) => !s)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                aria-label="Toggle password visibility"
+                aria-label={t('Toggle password visibility')}
               >
                 {showPass ? '🙈' : '👁️'}
               </button>
               {errors.password && <p className="err">{errors.password}</p>}
             </div>
-            <p className="text-xs text-slate-500">We send a one time code to this email to confirm it is yours.</p>
+            <p className="text-xs text-slate-500">{t('We send a one time code to this email to confirm it is yours.')}</p>
             <button type="submit" disabled={busy} className="btn-primary w-full">
-              {busy ? 'Sending OTP...' : 'Sign Up'}
+              {busy ? t('Sending OTP...') : t('Sign Up')}
             </button>
           </form>
         ) : (
           <form onSubmit={submitPhone} className="mt-6 space-y-4" noValidate>
             <div>
-              <input aria-label="Your name" className="input" placeholder="Name" value={phoneForm.name} onChange={setPhone('name')} />
+              <input aria-label={t('Your name')} className="input" placeholder={t('Name')} value={phoneForm.name} onChange={setPhone('name')} />
               {errors.name && <p className="err">{errors.name}</p>}
             </div>
             <div>
               <input
-                aria-label="Mobile number"
+                aria-label={t('Mobile number')}
                 className="input"
                 inputMode="numeric"
-                placeholder="10-digit mobile"
+                placeholder={t('10-digit mobile')}
                 value={phoneForm.phone}
                 onChange={setPhone('phone')}
               />
@@ -177,10 +183,10 @@ export default function Signup() {
             </div>
             <div className="relative">
               <input
-                aria-label="Password"
+                aria-label={t('Password')}
                 className="input pr-12"
                 type={showPass ? 'text' : 'password'}
-                placeholder="Password"
+                placeholder={t('Password')}
                 value={phoneForm.password}
                 onChange={setPhone('password')}
               />
@@ -188,7 +194,7 @@ export default function Signup() {
                 type="button"
                 onClick={() => setShowPass((s) => !s)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                aria-label="Toggle password visibility"
+                aria-label={t('Toggle password visibility')}
               >
                 {showPass ? '🙈' : '👁️'}
               </button>
@@ -203,22 +209,22 @@ export default function Signup() {
               {errors.dob && <p className="err">{errors.dob}</p>}
             </div>
             <p className="text-xs text-slate-500">
-              Your date of birth is also your backup sign in, so keep it real. No email verification needed.
+              {t('Your date of birth is also your backup sign in, so keep it real. No email verification needed.')}
             </p>
             <button type="submit" disabled={busy} className="btn-primary w-full">
-              {busy ? 'Creating account...' : 'Sign Up'}
+              {busy ? t('Creating account...') : t('Sign Up')}
             </button>
           </form>
         )}
 
         <div className="my-5 flex items-center gap-3 text-xs font-semibold text-slate-400">
-          <span className="h-px flex-1 bg-slate-200" /> OR <span className="h-px flex-1 bg-slate-200" />
+          <span className="h-px flex-1 bg-slate-200" /> {t('OR')} <span className="h-px flex-1 bg-slate-200" />
         </div>
         <GoogleButton onCredential={onGoogle} />
         <p className="mt-6 text-center text-sm text-slate-500">
-          Already have an account?{' '}
+          {t('Already have an account?')}{' '}
           <Link to="/login" className="font-semibold text-primary hover:underline">
-            Log In
+            {t('Log In')}
           </Link>
         </p>
       </div>
@@ -233,7 +239,7 @@ export default function Signup() {
           try {
             const res = await authService.resendOtp({ email: form.email, purpose: 'signup' });
             setOtp((o) => ({ ...o, devCode: res.devCode }));
-            toast('New OTP sent', 'info');
+            toast(t('New OTP sent'), 'info');
           } catch (e) {
             toast(errMsg(e), 'error');
           }

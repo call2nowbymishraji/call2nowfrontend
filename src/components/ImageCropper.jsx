@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLang } from '../context/LangContext.jsx';
 
 const OUT_PX = 1200;
 const PAD = 24;
 
 export default function ImageCropper({ file, aspect = 1, radius = 'rounded-xl', title = 'Drag the image to adjust', onConfirm, onCancel }) {
+  const { t } = useLang();
   const [img, setImg] = useState(null);
   const [stage, setStage] = useState({ w: 0, h: 0 });
   const [box, setBox] = useState(null); // { x, y, w, h } in displayed-image px
@@ -131,20 +133,20 @@ export default function ImageCropper({ file, aspect = 1, radius = 'rounded-xl', 
           type="button"
           onClick={onCancel}
           className="grid h-9 w-9 place-items-center rounded-full text-xl text-slate-600 transition hover:bg-slate-100"
-          aria-label="Cancel"
+          aria-label={t('Cancel')}
         >
           ×
         </button>
-        <p className="flex-1 truncate text-sm font-bold text-slate-800 sm:text-base">{title}</p>
+        <p className="flex-1 truncate text-sm font-bold text-slate-800 sm:text-base">{t(title)}</p>
         <button type="button" onClick={confirm} disabled={!box || saving} className="text-sm font-bold text-primary hover:underline disabled:opacity-50">
-          {saving ? 'Saving...' : 'Upload'}
+          {saving ? t('Saving...') : t('Upload')}
         </button>
       </div>
 
       <div ref={stageRef} className="relative flex flex-1 items-center justify-center overflow-hidden">
         {img && dw > 0 && (
           <div className="relative" style={{ width: `${dw}px`, height: `${dh}px` }}>
-            <img src={img.src} alt="crop preview" draggable={false} className="h-full w-full select-none rounded-lg" />
+            <img src={img.src} alt={t('crop preview')} draggable={false} className="h-full w-full select-none rounded-lg" />
             {box && (
               <div
                 className={`absolute ${radius}`}
@@ -185,7 +187,7 @@ export default function ImageCropper({ file, aspect = 1, radius = 'rounded-xl', 
                 <div
                   className="absolute -bottom-3 -right-3 grid h-8 w-8 place-items-center rounded-full bg-white text-xs font-bold text-slate-700 shadow-card"
                   style={{ cursor: 'nwse-resize', touchAction: 'none' }}
-                  aria-label="Resize box"
+                  aria-label={t('Resize box')}
                   onPointerDown={(e) => {
                     e.stopPropagation();
                     try {
@@ -223,7 +225,7 @@ export default function ImageCropper({ file, aspect = 1, radius = 'rounded-xl', 
             type="button"
             onClick={() => resizeBy(1.2)}
             className="grid h-10 w-10 place-items-center rounded-lg bg-white/95 text-xl font-bold text-slate-700 shadow-card hover:text-primary"
-            aria-label="Bigger box"
+            aria-label={t('Bigger box')}
           >
             +
           </button>
@@ -231,7 +233,7 @@ export default function ImageCropper({ file, aspect = 1, radius = 'rounded-xl', 
             type="button"
             onClick={() => resizeBy(0.8)}
             className="grid h-10 w-10 place-items-center rounded-lg bg-white/95 text-xl font-bold text-slate-700 shadow-card hover:text-primary"
-            aria-label="Smaller box"
+            aria-label={t('Smaller box')}
           >
             −
           </button>
@@ -242,14 +244,16 @@ export default function ImageCropper({ file, aspect = 1, radius = 'rounded-xl', 
           onClick={confirm}
           disabled={!box || saving}
           className="absolute bottom-6 right-6 grid h-14 w-14 place-items-center rounded-full bg-ggreen text-2xl font-bold text-white shadow-card transition hover:brightness-110 disabled:opacity-50"
-          aria-label="Confirm and upload"
+          aria-label={t('Confirm and upload')}
         >
           ✓
         </button>
       </div>
 
       <p className="bg-white/95 px-4 py-3 text-center text-xs font-semibold text-slate-600">
-        The full photo is shown. Move the bright box or drag its corner handle to choose the visible area. Only the box area is uploaded.
+        {t(
+          'The full photo is shown. Move the bright box or drag its corner handle to choose the visible area. Only the box area is uploaded.',
+        )}
       </p>
     </div>
   );

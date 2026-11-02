@@ -1,9 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useLang } from '../context/LangContext.jsx';
 
 const GAP = 16;
 const ANIM_MS = 600;
 
 export default function RotatingRow({ items, target = 2, stepMs = 2500, render, aspect = 'aspect-[4/5]' }) {
+  const { t } = useLang();
   const [wide, setWide] = useState(() => window.innerWidth >= 640);
   const [index, setIndex] = useState(0);
   const [animate, setAnimate] = useState(true);
@@ -107,14 +109,14 @@ export default function RotatingRow({ items, target = 2, stepMs = 2500, render, 
           <button
             onClick={nudge(-1)}
             className="absolute -left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white text-slate-700 shadow-card hover:text-primary"
-            aria-label="Previous"
+            aria-label={t('Previous')}
           >
             ‹
           </button>
           <button
             onClick={nudge(1)}
             className="absolute -right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white text-slate-700 shadow-card hover:text-primary"
-            aria-label="Next"
+            aria-label={t('Next')}
           >
             ›
           </button>

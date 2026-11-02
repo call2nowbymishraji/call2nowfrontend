@@ -10,6 +10,8 @@ import HelpWidget from '../components/HelpWidget.jsx';
 import LoadingOverlay, { CardSkeletonRow } from '../components/LoadingOverlay.jsx';
 import searchService from '../services/searchService.js';
 import { useSiteSettings } from '../context/SiteSettingsContext.jsx';
+import { useRegion } from '../context/RegionContext.jsx';
+import { useLang } from '../context/LangContext.jsx';
 import Seo from '../seo/Seo.jsx';
 import { homeSeo } from '../seo/pages.js';
 import { HOMEPAGE_H1 } from '../seo/site.js';
@@ -19,13 +21,17 @@ export default function Landing() {
   // a slow backend is still connecting.
   const [suggested, setSuggested] = useState(null);
   const { featuredLive, homeFiltersLive, ready: settingsReady } = useSiteSettings();
+  const { country } = useRegion();
+  const { t } = useLang();
 
   useEffect(() => {
+    // Going back to pending on a new pick reuses the same loader the first visit sees.
+    setSuggested(null);
     searchService
-      .suggested()
+      .suggested(country)
       .then((d) => setSuggested(d.profiles || []))
       .catch(() => setSuggested([]));
-  }, []);
+  }, [country]);
 
   const loading = suggested === null || !settingsReady;
 
@@ -46,9 +52,9 @@ export default function Landing() {
 
         <section className="mx-auto w-full max-w-[1400px] px-4 pt-8">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="section-title">Profiles suggested by us</h2>
+            <h2 className="section-title">{t('Profiles suggested by us')}</h2>
             <Link to="/search" className="shrink-0 text-sm font-semibold text-primary hover:underline">
-              View all
+              {t('View all')}
             </Link>
           </div>
           {loading ? (
@@ -57,11 +63,10 @@ export default function Landing() {
             <SuggestedCarousel profiles={suggested} />
           ) : (
             <div className="card grid place-items-center p-10 text-sm text-slate-400">
-              No business profiles yet. Be the first to{' '}
-              <Link to="/signup" className="ml-1 font-semibold text-primary hover:underline">
-                create one
+              {t('No business profiles yet.')}{' '}
+              <Link to="/signup" className="font-semibold text-primary hover:underline">
+                {t('Be the first to create one')}
               </Link>
-              .
             </div>
           )}
         </section>

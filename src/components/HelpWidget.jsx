@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useLang } from '../context/LangContext.jsx';
 
 const WHATSAPP_URL = 'https://wa.me/message/LOPV2VBZKKF4E1';
 const EMAIL_URL = 'mailto:helpcall2now@gmail.com';
 
 export default function HelpWidget() {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
 
   return (
@@ -17,14 +19,14 @@ export default function HelpWidget() {
             className="inline-flex items-center gap-2.5 rounded-xl bg-ggreen px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
           >
             <WhatsAppGlyph />
-            WhatsApp us
+            {t('WhatsApp us')}
           </a>
           <a
             href={EMAIL_URL}
             className="inline-flex items-center gap-2.5 rounded-xl bg-gred px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
           >
             <MailGlyph />
-            Email us
+            {t('Email us')}
           </a>
         </div>
       )}
@@ -33,8 +35,8 @@ export default function HelpWidget() {
           href={WHATSAPP_URL}
           target="_blank"
           rel="noreferrer"
-          aria-label="Chat with us on WhatsApp"
-          title="Chat with us on WhatsApp"
+          aria-label={t('Chat with us on WhatsApp')}
+          title={t('Chat with us on WhatsApp')}
           className="grid h-14 w-14 place-items-center rounded-full bg-ggreen text-white shadow-card transition hover:scale-105 hover:brightness-110"
         >
           <WhatsAppGlyph big />
@@ -42,8 +44,8 @@ export default function HelpWidget() {
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          aria-label="Help"
-          title="Help"
+          aria-label={t('Help')}
+          title={t('Help')}
           className="grid h-14 w-14 place-items-center rounded-full bg-primary text-white shadow-card transition hover:scale-105 hover:brightness-110"
         >
           <HelpGlyph />
